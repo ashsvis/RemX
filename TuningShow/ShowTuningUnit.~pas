@@ -1,0 +1,367 @@
+unit ShowTuningUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ComCtrls, ExtCtrls, StdCtrls, Buttons, ActnList, AppEvnts,
+  PanelFormUnit;
+
+type
+  TShowTuningForm = class(TForm)
+    ButtonsPanel: TPanel;
+    PageControl: TPageControl;
+    tsGeneral: TTabSheet;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    edObjectName: TEdit;
+    edStationName: TEdit;
+    cbStationNumber: TComboBox;
+    tsSerialLink: TTabSheet;
+    tsOtherPrograms: TTabSheet;
+    tsSupport: TTabSheet;
+    btnClose: TButton;
+    btnCancel: TButton;
+    Label4: TLabel;
+    dtpDate: TDateTimePicker;
+    dtpTime: TDateTimePicker;
+    Label6: TLabel;
+    Label8: TLabel;
+    cbSchemeSize: TComboBox;
+    Label9: TLabel;
+    cbAlarmSound: TComboBox;
+    Label10: TLabel;
+    cbPrintColor: TComboBox;
+    Label11: TLabel;
+    cbSystemShell: TCheckBox;
+    Timer: TTimer;
+    Label51: TLabel;
+    tvExternalModules: TTreeView;
+    btAddExtProc: TButton;
+    btChangeExtProc: TButton;
+    btDeleteExtProc: TButton;
+    TreeActionList: TActionList;
+    actChangeExtProc: TAction;
+    actDeleteExtProc: TAction;
+    Label52: TLabel;
+    clbSupport: TListBox;
+    cbRootScheme: TComboBox;
+    cbMonitors: TComboBox;
+    Label5: TLabel;
+    tcLink: TTabControl;
+    tsNetLink: TTabSheet;
+    Label16: TLabel;
+    cbNetRole: TComboBox;
+    gbNetClient: TGroupBox;
+    leServerAddress: TLabeledEdit;
+    leServerPort: TLabeledEdit;
+    tsArchives: TTabSheet;
+    GroupBox1: TGroupBox;
+    Label13: TLabel;
+    cbDelTrends: TComboBox;
+    cbTrashTrends: TCheckBox;
+    Label21: TLabel;
+    cbDelSnapMin: TComboBox;
+    cbTrashSnapMin: TCheckBox;
+    Label22: TLabel;
+    cbDelSnapHour: TComboBox;
+    cbTrashSnapHour: TCheckBox;
+    Label23: TLabel;
+    cbDelAverHour: TComboBox;
+    cbTrashAverHour: TCheckBox;
+    Label24: TLabel;
+    cbDelLogs: TComboBox;
+    cbTrashLogs: TCheckBox;
+    Label25: TLabel;
+    cbDelReportLogs: TComboBox;
+    cbTrashReportLogs: TCheckBox;
+    lbSaveToLogForNet: TLabel;
+    cbSaveToLogForNet: TCheckBox;
+    pcTransportProtocol: TPageControl;
+    TabSheet1: TTabSheet;
+    Label15: TLabel;
+    Label17: TLabel;
+    Label18: TLabel;
+    Label19: TLabel;
+    Label20: TLabel;
+    cbPort: TComboBox;
+    cbBaudrate: TComboBox;
+    cbParity: TComboBox;
+    cbDataSize: TComboBox;
+    cbStops: TComboBox;
+    TabSheet2: TTabSheet;
+    Label27: TLabel;
+    Label29: TLabel;
+    edPrimaryAddr: TEdit;
+    edPrimaryPort: TEdit;
+    Panel1: TPanel;
+    Label12: TLabel;
+    Label7: TLabel;
+    Label14: TLabel;
+    Label26: TLabel;
+    cbSaveToLog: TCheckBox;
+    cbRepeatCount: TComboBox;
+    edtTimeOut: TEdit;
+    udTimeout: TUpDown;
+    cbLinkType: TComboBox;
+    Label28: TLabel;
+    cbDigErrFilter: TCheckBox;
+    procedure cbSystemShellClick(Sender: TObject);
+    procedure TimerTimer(Sender: TObject);
+    procedure dtpDateChange(Sender: TObject);
+    procedure btAddExtProcClick(Sender: TObject);
+    procedure actChangeExtProcUpdate(Sender: TObject);
+    procedure actChangeExtProcExecute(Sender: TObject);
+    procedure actDeleteExtProcExecute(Sender: TObject);
+    procedure cbRootSchemeDropDown(Sender: TObject);
+    procedure cbSaveToLogClick(Sender: TObject);
+    procedure tcLinkChange(Sender: TObject);
+    procedure tcLinkChanging(Sender: TObject; var AllowChange: Boolean);
+    procedure cbNetRoleChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure cbDigErrFilterClick(Sender: TObject);
+  private
+    FPanel: TPanelForm;
+//    function CheckIPValid(AText: string): boolean;
+//    function CheckPortValid(AText: string): boolean;
+  public
+    property Panel: TPanelForm read FPanel write FPanel;
+  end;
+
+var
+  ShowTuningForm: TShowTuningForm;
+
+implementation
+
+uses AddExtModuleUnit, FileCtrl, EntityUnit, RemXUnit;
+
+{$R *.dfm}
+
+procedure TShowTuningForm.cbSystemShellClick(Sender: TObject);
+begin
+  if cbSystemShell.Checked then
+    cbSystemShell.Caption:='Включена'
+  else
+    cbSystemShell.Caption:='Выключена';
+end;
+
+procedure TShowTuningForm.TimerTimer(Sender: TObject);
+var DT: TDateTime;
+begin
+  DT:=Now;
+  dtpDate.DateTime:=Int(DT);
+  dtpTime.DateTime:=Frac(DT);
+end;
+
+procedure TShowTuningForm.dtpDateChange(Sender: TObject);
+begin
+  Timer.Enabled:=False;
+end;
+
+procedure TShowTuningForm.btAddExtProcClick(Sender: TObject);
+var Node: TTreeNode;
+begin
+  AddExtModuleForm:=TAddExtModuleForm.Create(Self);
+  try
+    with AddExtModuleForm do
+    begin
+      if ShowModal = mrOk then
+      begin
+        if Trim(edMenuName.Text)='' then
+          RemxForm.ShowError(
+            'Название пункта меню не может быть пустой строкой!')
+        else
+        if not FileExists(edProgramPath.Text) then
+          RemxForm.ShowError('Файл программы по указанному пути не найден!')
+        else
+        if not DirectoryExists(edWorkPath.Text) then
+          RemxForm.ShowError('Указанная рабочая папка не найдена!')
+        else
+        with tvExternalModules do
+        begin
+          Node:=Items.Add(nil,edMenuName.Text);
+          Items.AddChild(Node,'Программа: '+edProgramPath.Text);
+          Items.AddChild(Node,'Рабочая папка: '+edWorkPath.Text);
+          Items.AddChild(Node,'Уровень доступа: '+cbLevel.Text);
+          Selected:=Node;
+          Node.Expand(False);
+        end;
+      end;
+    end;
+  finally
+    AddExtModuleForm.Free;
+  end;
+end;
+
+procedure TShowTuningForm.actChangeExtProcUpdate(Sender: TObject);
+begin
+  (Sender as TAction).Enabled:=(tvExternalModules.Selected <> nil);
+end;
+
+procedure TShowTuningForm.actChangeExtProcExecute(Sender: TObject);
+var Node: TTreeNode; S: string;
+begin
+  Node:=tvExternalModules.Selected;
+  if Node.Level = 1 then Node:=Node.Parent;
+  AddExtModuleForm:=TAddExtModuleForm.Create(Self);
+  try
+    with AddExtModuleForm do
+    begin
+      edMenuName.Text:=Node.Text;
+      Node:=Node.getFirstChild;
+      S:=Node.Text;
+      Delete(S,1,Pos(': ',S)+1);
+      edProgramPath.Text:=S;
+      Node:=Node.GetNext;
+      S:=Node.Text;
+      Delete(S,1,Pos(': ',S)+1);
+      edWorkPath.Text:=S;
+      Node:=Node.GetNext;
+      S:=Node.Text;
+      Delete(S,1,Pos(': ',S)+1);
+      cbLevel.ItemIndex:=cbLevel.Items.IndexOf(S);
+      if ShowModal = mrOk then
+      begin
+        if Trim(edMenuName.Text)='' then
+          RemxForm.ShowError(
+          'Название пункта меню не может быть пустой строкой!')
+        else
+        if not FileExists(edProgramPath.Text) then
+          RemxForm.ShowError(
+          'Файл программы по указанному пути не найден!')
+        else
+        if not DirectoryExists(edWorkPath.Text) then
+          RemxForm.ShowError('Указанная рабочая папка не найдена!')
+        else
+        begin
+          Node:=tvExternalModules.Selected;
+          if Node.Level = 1 then Node:=Node.Parent;
+          Node.Text:=edMenuName.Text;
+          Node:=Node.getFirstChild;
+          Node.Text:='Программа: '+edProgramPath.Text;
+          Node:=Node.GetNext;
+          Node.Text:='Рабочая папка: '+edWorkPath.Text;
+          Node:=Node.GetNext;
+          Node.Text:='Уровень доступа: '+cbLevel.Text;
+          tvExternalModules.Selected:=Node.Parent;
+          Node.Expand(False);
+        end;
+      end;
+    end;
+  finally
+    AddExtModuleForm.Free;
+  end;
+end;
+
+procedure TShowTuningForm.actDeleteExtProcExecute(Sender: TObject);
+var Node: TTreeNode;
+begin
+  Node:=tvExternalModules.Selected;
+  if Node.Level = 1 then Node:=Node.Parent;
+  if RemxForm.ShowQuestion('В самом деле хотите удалить?')=mrOK then
+    tvExternalModules.Items.Delete(Node);
+end;
+
+procedure TShowTuningForm.cbRootSchemeDropDown(Sender: TObject);
+var sr: TSearchRec; FileAttrs: Integer;
+begin
+  cbRootScheme.Items.Clear;
+  FileAttrs:=faDirectory;
+  if FindFirst(IncludeTrailingPathDelimiter(Caddy.CurrentSchemsPath)+'*.SCM',FileAttrs,sr) = 0 then
+  begin
+    repeat
+      if (sr.Attr and FileAttrs) <> sr.Attr then
+        cbRootScheme.Items.Add(sr.Name);
+    until FindNext(sr) <> 0;
+    FindClose(sr);
+  end;
+end;
+
+procedure TShowTuningForm.cbSaveToLogClick(Sender: TObject);
+begin
+  with Sender as TCheckBox do
+  if Checked then
+    Caption:='Включен'
+  else
+    Caption:='Выключен';
+end;
+
+procedure TShowTuningForm.tcLinkChange(Sender: TObject);
+var si: string;
+begin
+  si:=IntToStr(tcLink.TabIndex+1);
+  cbPort.ItemIndex:=Config.ReadInteger('Channel'+si,'Port',0);
+  cbBaudrate.ItemIndex:=Config.ReadInteger('Channel'+si,'Baudrate',8);
+  cbParity.ItemIndex:=Config.ReadInteger('Channel'+si,'Parity',0);
+  cbDataSize.ItemIndex:=Config.ReadInteger('Channel'+si,'DataSize',3);
+  cbStops.ItemIndex:=Config.ReadInteger('Channel'+si,'Stops',0);
+  udTimeOut.Position:=Config.ReadInteger('Channel'+si,'TimeOut',800);
+  cbSaveToLog.Checked:=Config.ReadBool('Channel'+si,'SaveToLog',False);
+  cbRepeatCount.ItemIndex:=Config.ReadInteger('Channel'+si,'RepeatCount',2);
+  cbLinkType.ItemIndex:=Config.ReadInteger('Channel'+si,'LinkType',0);
+  pcTransportProtocol.ActivePageIndex:=Config.ReadInteger('Channel'+si,'TransportProtocol',0);
+  edPrimaryAddr.Text := Config.ReadString('Channel'+si,'PrimaryAddr','');
+  edPrimaryPort.Text := Config.ReadString('Channel'+si,'PrimaryPort','');
+end;
+
+procedure TShowTuningForm.tcLinkChanging(Sender: TObject;
+  var AllowChange: Boolean);
+var si: string; i: integer;
+begin
+  i:=tcLink.TabIndex+1;
+  si:=IntToStr(i);
+  Config.WriteInteger('Channel'+si,'Port',cbPort.ItemIndex);
+  Config.WriteInteger('Channel'+si,'Baudrate',cbBaudrate.ItemIndex);
+  Config.WriteInteger('Channel'+si,'Parity',cbParity.ItemIndex);
+  Config.WriteInteger('Channel'+si,'DataSize',cbDataSize.ItemIndex);
+  Config.WriteInteger('Channel'+si,'Stops',cbStops.ItemIndex);
+  Config.WriteInteger('Channel'+si,'TimeOut',udTimeOut.Position);
+  Config.WriteBool('Channel'+si,'SaveToLog',cbSaveToLog.Checked);
+  Config.WriteInteger('Channel'+si,'RepeatCount',cbRepeatCount.ItemIndex);
+  Config.WriteInteger('Channel'+si,'LinkType',cbLinkType.ItemIndex);
+  Config.WriteInteger('Channel'+si,'TransportProtocol',pcTransportProtocol.ActivePageIndex);
+  Config.WriteString('Channel'+si,'PrimaryAddr',edPrimaryAddr.Text);
+  Config.WriteString('Channel'+si,'PrimaryPort',edPrimaryPort.Text);
+end;
+
+procedure TShowTuningForm.cbNetRoleChange(Sender: TObject);
+begin
+  case cbNetRole.ItemIndex of
+   0: begin
+        leServerAddress.Enabled:=False;
+        leServerPort.Enabled:=False;
+        cbSaveToLogForNet.Enabled:=False;
+        lbSaveToLogForNet.Enabled:=False;
+      end;
+  else
+      begin
+        leServerAddress.Enabled:=True;
+        leServerPort.Enabled:=True;
+        cbSaveToLogForNet.Enabled:=True;
+        lbSaveToLogForNet.Enabled:=True;
+      end;
+  end;
+end;
+
+procedure TShowTuningForm.FormShow(Sender: TObject);
+begin
+  cbNetRoleChange(cbNetRole);
+end;
+
+procedure TShowTuningForm.FormCreate(Sender: TObject);
+var i: integer;
+begin
+  for i := 1 to 99 do cbPort.Items.Add(Format('COM%d',[i]));
+end;
+
+procedure TShowTuningForm.cbDigErrFilterClick(Sender: TObject);
+begin
+  if cbDigErrFilter.Checked then
+    cbDigErrFilter.Caption:='Включен'
+  else
+    cbDigErrFilter.Caption:='Выключен';
+end;
+
+end.
