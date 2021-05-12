@@ -1,0 +1,684 @@
+unit ShowHistGroupUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ExtCtrls, ToolWin, ComCtrls, Grids, Buttons, AppEvnts,
+  ActnList, ImgList, EntityUnit, Menus, FindDialogUnit, PanelFormUnit;
+
+type
+  TShowHistGroupForm = class(TForm, IEntity)
+    DrawGrid: TDrawGrid;
+    ToolBar1: TToolBar;
+    Panel1: TPanel;
+    lbGroupName: TLabel;
+    edGroupName: TEdit;
+    ApplicationEvents1: TApplicationEvents;
+    sbMore: TSpeedButton;
+    tbFind: TToolButton;
+    HistGroupActionList: TActionList;
+    actFindEntityName: TAction;
+    ToolButton1: TToolButton;
+    tbSaveHist: TToolButton;
+    actSaveHistGroups: TAction;
+    DrawGridPopupMenu: TPopupMenu;
+    ToolButton2: TToolButton;
+    ToolButton3: TToolButton;
+    ToolButton4: TToolButton;
+    ToolButton5: TToolButton;
+    actNew: TAction;
+    actChange: TAction;
+    actDelete: TAction;
+    ImageList: TImageList;
+    procedure FormResize(Sender: TObject);
+    procedure DrawGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure DrawGridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure edGroupNameKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
+    procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+    procedure actSaveHistGroupsUpdate(Sender: TObject);
+    procedure actSaveHistGroupsExecute(Sender: TObject);
+    procedure DrawGridDblClick(Sender: TObject);
+    procedure DrawGridPopupMenuPopup(Sender: TObject);
+    procedure DrawGridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure DrawGridTopLeftChanged(Sender: TObject);
+    procedure DrawGridKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure actNewUpdate(Sender: TObject);
+    procedure actChangeExecute(Sender: TObject);
+    procedure actChangeUpdate(Sender: TObject);
+    procedure actDeleteExecute(Sender: TObject);
+    procedure actDeleteUpdate(Sender: TObject);
+    procedure FindDialogFind(Sender: TObject);
+    procedure actFindEntityNameExecute(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+  private
+    SelRow,SelCol: integer;
+    SmallImages: TImageList;
+    FindDialog: TFindDialogForm;
+    FPanel: TPanelForm;
+    procedure ChangeParamClick(Sender: TObject);
+    procedure ClearLinkClick(Sender: TObject);
+    procedure ConnectEntity(Entity: TEntity); stdcall;
+    procedure ConnectImageList(ImageList: TImageList); stdcall;
+    procedure UpdateRealTime; stdcall;
+  public
+    procedure UpdateHistGroups;
+    property Panel: TPanelForm read FPanel write FPanel;
+  end;
+
+var
+  ShowHistGroupForm: TShowHistGroupForm;
+
+function QueryHourValue(Group,Place: integer; HD: TDateTime;
+                        AsAverage: boolean; var Quality: boolean): Double;
+
+implementation
+
+uses GetLinkNameUnit, RemXUnit;
+
+{$R *.dfm}
+
+function QueryHourValue(Group,Place: integer; HD: TDateTime;
+                        AsAverage: boolean; var Quality: boolean): Double;
+var DirName,FileName: string; i: integer; F: TFileStream;
+    Item: TCashTrendTableItem;
+begin
+  Result:=0.0;
+  if AsAverage then
+    DirName:=IncludeTrailingPathDelimiter(Caddy.CurrentTablePath)+ATableType[ttHourAver]+
+             FormatDateTime('\yymmdd\hh',HD)
+  else
+    DirName:=IncludeTrailingPathDelimiter(Caddy.CurrentTablePath)+ATableType[ttHourSnap]+
+             FormatDateTime('\yymmdd\hh',HD);
+  FileName:=IncludeTrailingPathDelimiter(DirName)+Format('%3.3d.TBL',[Group]);
+  if FileExists(FileName) then
+  begin
+    F:=TryOpenToReadFile(FileName);
+    if not Assigned(F) then Exit;
+    try
+      F.Seek(0,soFromBeginning);
+      while F.Position < F.Size do
+      begin
+        if Application.Terminated then Break;
+        try
+          F.ReadBuffer(Item.SnapTime,SizeOf(Item.SnapTime));
+          for i:=1 to 8 do
+          begin
+            F.ReadBuffer(Item.Val[i],SizeOf(Item.Val[i]));
+            F.ReadBuffer(Item.Quality[i],SizeOf(Item.Quality[i]));
+          end;
+          Quality:=Item.Quality[Place];
+          if Item.Quality[Place] or AsAverage then
+            Result:=Item.Val[Place]
+          else
+            Result:=0.0;
+        except
+          Break;
+        end;
+      end;
+    finally
+      F.Free;
+    end;
+  end;
+end;
+
+procedure TShowHistGroupForm.FormResize(Sender: TObject);
+var i: integer; kf: Double;
+begin
+  kf := PanelWidth / 1024;
+  edGroupName.Width:=Trunc(1009 * kf);
+  DrawGrid.DefaultRowHeight:=Trunc(19 * PanelHeight / 768);
+  DrawGrid.Font.Size:=Trunc(9 * kf);
+  DrawGrid.Font.Name:='Tahoma';
+  DrawGrid.ColWidths[0]:=Trunc(34 * kf);
+  for i:=1 to 8 do DrawGrid.ColWidths[i]:=Trunc(120 * kf);
+//  case Caddy.ScreenSizeIndex of
+//   0: begin
+//        edGroupName.Width:=785;
+//        DrawGrid.DefaultRowHeight:=19;
+//        DrawGrid.Font.Size:=8;
+//        DrawGrid.Font.Name:='Arial Narrow';
+//        DrawGrid.ColWidths[0]:=27;
+//        for i:=1 to 8 do DrawGrid.ColWidths[i]:=93;
+//      end;
+//   1: begin
+//        edGroupName.Width:=1009;
+//        DrawGrid.DefaultRowHeight:=19;
+//        DrawGrid.Font.Size:=9;
+//        DrawGrid.Font.Name:='Tahoma';
+//        DrawGrid.ColWidths[0]:=34;
+//        for i:=1 to 8 do DrawGrid.ColWidths[i]:=120;
+//      end;
+//   2: begin
+//        edGroupName.Width:=1261;
+//        DrawGrid.DefaultRowHeight:=22;
+//        DrawGrid.Font.Size:=10;
+//        DrawGrid.Font.Name:='Tahoma';
+//        DrawGrid.ColWidths[0]:=42;
+//        for i:=1 to 8 do DrawGrid.ColWidths[i]:=151;
+//      end;
+//  end;
+end;
+
+procedure TShowHistGroupForm.DrawGridDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+var S: string; w,h,dx,dy: integer;
+begin
+  w:=Rect.Right-Rect.Left;
+  h:=Rect.Bottom-Rect.Top;
+  with DrawGrid do
+  begin
+    if ARow = 0 then
+    begin
+      if ACol = 0 then
+      begin
+        Canvas.Pen.Color:=clBlack;
+        Canvas.MoveTo(Rect.Left,Rect.Top);
+        Canvas.LineTo(Rect.Right,Rect.Bottom);
+      end
+      else
+      begin
+        S:=Format('Место %d',[ACol]);
+        dx:=(w-Canvas.TextWidth(S)) div 2;
+        dy:=(h-Canvas.TextHeight(S)) div 2;
+        Canvas.TextRect(Rect,Rect.Left+dx,Rect.Top+dy,S);
+      end;
+    end
+    else
+    begin
+      if ACol = 0 then
+      begin
+        S:=Format('%d.',[ARow]);
+        dx:=w-Canvas.TextWidth(S)-3;
+        dy:=(h-Canvas.TextHeight(S)) div 2;
+        Canvas.TextRect(Rect,Rect.Left+dx,Rect.Top+dy,S);
+      end
+      else
+      with Caddy.HistGroups[ARow] do
+      begin
+        if Assigned(Entity[ACol]) then
+        begin
+          S:=Place[ACol]+'.'+AParamKind[Kind[ACol]];
+          RemXForm.EntityTypeImageList.Draw(
+                       Canvas,Rect.Left+3,Rect.Top+2,
+                       EntityClassIndex(Entity[ACol].ClassType)+3);
+          Rect.Left:=Rect.Left+18;
+        end
+        else
+          S:='';
+        dx:=3;
+        dy:=(h-Canvas.TextHeight(S)) div 2;
+        Canvas.TextRect(Rect,Rect.Left+dx,Rect.Top+dy,S);
+      end;
+    end;
+  end;
+end;
+
+procedure TShowHistGroupForm.DrawGridSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+var E: TEntity;
+begin
+  SelRow:=ARow;
+  SelCol:=ACol;
+  lbGroupName.Caption:=Format('Наименование группы № %d:',[ARow]);
+  edGroupName.Text:=Caddy.HistGroups[ARow].GroupName;
+  edGroupName.SelectAll;
+  E:=Caddy.HistGroups[ARow].Entity[ACol];
+  if Assigned(Panel.TopForm) and (Panel.TopForm = Self) then
+  begin
+    if Assigned(E) then
+      RemXForm.ShowMessage:=E.PtName+' - '+E.PtDesc
+    else
+      RemXForm.ShowMessage:='Нет в базе данных';
+  end;
+end;
+
+procedure TShowHistGroupForm.edGroupNameKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    Caddy.HistGroups[SelRow].GroupName:=edGroupName.Text;
+    Caddy.HistChanged:=True;
+    edGroupName.SelectAll;
+    Key:=0;
+  end;
+  if Key = VK_ESCAPE then
+  begin
+    edGroupName.Text:=Caddy.HistGroups[SelRow].GroupName;
+    edGroupName.SelectAll;
+    Key:=0;
+  end;
+end;
+
+procedure TShowHistGroupForm.FormCreate(Sender: TObject);
+begin
+  SelRow:=1;
+  SelCol:=1;
+  sbMore.Parent:=DrawGrid;
+  Resize;
+  sbMore.Width:=DrawGrid.DefaultRowHeight-2;
+  sbMore.Height:=sbMore.Width;
+  sbMore.Hint:='    Изменить значение в этой ячейке.'+#13+
+               'Правая кнопка мыши на ячейке показывает'+#13+
+               '      дополнительные возможности.';
+  FindDialog:=TFindDialogForm.Create(Self);
+  FindDialog.leFindExample.CharCase:=ecUpperCase;
+  FindDialog.OnFind:=FindDialogFind;
+end;
+
+procedure TShowHistGroupForm.ApplicationEvents1Idle(Sender: TObject;
+  var Done: Boolean);
+begin
+  if (Screen.ActiveControl = DrawGrid) and
+     (DrawGrid.Selection.Left = DrawGrid.Selection.Right) and
+     (DrawGrid.Selection.Top = DrawGrid.Selection.Bottom) then
+  begin
+    sbMore.Left:=DrawGrid.ColWidths[0]+
+                (DrawGrid.ColWidths[1]+1)*SelCol-sbMore.Width-1;
+    sbMore.Top:=DrawGrid.DefaultRowHeight+
+                (DrawGrid.DefaultRowHeight+1)*(SelRow-DrawGrid.TopRow)+2;
+    sbMore.Visible:=(Caddy.UserLevel > 4);
+  end
+  else
+    sbMore.Visible:=False;
+end;
+
+procedure TShowHistGroupForm.actSaveHistGroupsUpdate(Sender: TObject);
+begin
+  actSaveHistGroups.Enabled:=Caddy.HistChanged;
+end;
+
+procedure TShowHistGroupForm.actSaveHistGroupsExecute(Sender: TObject);
+begin
+  actSaveHistGroups.Enabled:=False;
+  try
+    Caddy.SaveHistGroups(Caddy.CurrentBasePath);
+  finally
+    actSaveHistGroups.Enabled:=True;
+  end;
+end;
+
+procedure TShowHistGroupForm.DrawGridDblClick(Sender: TObject);
+begin
+  if sbMore.Visible then sbMore.Click;
+end;
+
+procedure TShowHistGroupForm.UpdateHistGroups;
+var CanSelect: boolean;
+begin
+  CanSelect:=True;
+  DrawGridSelectCell(DrawGrid,SelCol,SelRow,CanSelect);
+  DrawGrid.SetFocus;
+end;
+
+procedure TShowHistGroupForm.DrawGridPopupMenuPopup(Sender: TObject);
+var M: TMenuItem;
+begin
+  sbMore.Visible:=False;
+  with DrawGridPopupMenu do
+  begin
+    Items.Clear;
+    if not (Caddy.UserLevel > 4) then Exit;
+    with DrawGrid.Selection do
+    if (Left = Right) and (Top = Bottom) then
+    begin
+      M:=TMenuItem.Create(Self);
+      M.Action:=actNew; Items.Add(M);
+      M:=TMenuItem.Create(Self);
+      M.Action:=actChange; Items.Add(M);
+      M:=TMenuItem.Create(Self);
+      M.Action:=actDelete; Items.Add(M);
+      if Assigned(Caddy.HistGroups[SelRow].Entity[SelCol]) then
+      begin
+        with Caddy.HistGroups[SelRow] do
+        if Entity[SelCol].IsKontur then
+        begin
+          M:=TMenuItem.Create(Self); M.Caption:='-'; Items.Add(M);
+          M:=TMenuItem.Create(Self);  M.Caption:='PV'; M.Tag:=0;
+          M.OnClick:=ChangeParamClick; M.Checked:=(Kind[SelCol]=0); Items.Add(M);
+          M:=TMenuItem.Create(Self);  M.Caption:='SP'; M.Tag:=1;
+          M.OnClick:=ChangeParamClick; M.Checked:=(Kind[SelCol]=1); Items.Add(M);
+          M:=TMenuItem.Create(Self);  M.Caption:='OP'; M.Tag:=2;
+          M.OnClick:=ChangeParamClick; M.Checked:=(Kind[SelCol]=2); Items.Add(M);
+        end;
+      end;
+    end
+    else
+    begin
+      M:=TMenuItem.Create(Self);  M.Caption:='Очистить'; M.ImageIndex:=3;
+      M.OnClick:=ClearLinkClick; Items.Add(M);
+    end;
+  end;
+end;
+
+procedure TShowHistGroupForm.DrawGridMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var ARow,ACol: integer; CanSelect: boolean; P: TPoint;
+begin
+  if Button = mbRight then
+  begin
+    DrawGrid.MouseToCell(X,Y,ACol,ARow);
+    if (ACol in [1..8]) and (ARow in [1..125]) then
+    begin
+      with DrawGrid.Selection do
+      if (Left = Right) and (Top = Bottom) or
+         not (ACol in [Left..Right]) or not (ARow in [Top..Bottom]) then
+      begin
+        SelCol:=ACol;
+        SelRow:=ARow;
+        DrawGrid.Col:=ACol;
+        DrawGrid.Row:=ARow;
+        CanSelect:=True;
+        ApplicationEvents1Idle(ApplicationEvents1,CanSelect);
+      end;  
+      P:=DrawGrid.ClientToScreen(Point(X,Y));
+      DrawGridPopupMenu.Popup(P.X,P.Y);
+    end;
+  end;
+end;
+
+procedure TShowHistGroupForm.DrawGridTopLeftChanged(Sender: TObject);
+begin
+  sbMore.Visible:=False;
+  DrawGrid.Repaint;
+end;
+
+procedure TShowHistGroupForm.DrawGridKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    if sbMore.Visible then sbMore.Click;
+    Key:=0;
+  end;
+end;
+
+procedure TShowHistGroupForm.ChangeParamClick(Sender: TObject);
+var M: TMenuItem;
+begin
+  M:=Sender as TMenuItem;
+  Caddy.HistGroups[SelRow].Kind[SelCol]:=M.Tag;
+  Caddy.HistChanged:=True;
+  DrawGrid.Repaint;
+end;
+
+procedure TShowHistGroupForm.ClearLinkClick(Sender: TObject);
+var ACol,ARow: integer;
+begin
+  if RemxForm.ShowQuestion('Очистить выделенный диапазон?')=mrOK then
+  begin
+    with DrawGrid.Selection do
+    for ACol:=Left to Right do
+      for ARow:=Top to Bottom do
+      begin
+        Caddy.HistGroups[ARow].Place[ACol]:='';
+        Caddy.HistGroups[ARow].Entity[ACol]:=nil;
+        Caddy.HistGroups[ARow].Kind[ACol]:=0;
+      end;
+    Caddy.HistChanged:=True;
+    DrawGrid.Repaint;
+  end;
+end;
+
+procedure TShowHistGroupForm.actNewUpdate(Sender: TObject);
+begin
+  actNew.Enabled:=not Assigned(Caddy.HistGroups[SelRow].Entity[SelCol]);
+end;
+
+procedure TShowHistGroupForm.actChangeExecute(Sender: TObject);
+var List: TStringList; T,R: TEntity; AKind: Byte;
+begin
+  List:=TStringList.Create;
+  try
+    T:=Caddy.HistGroups[SelRow].Entity[SelCol];
+    R:=Caddy.FirstEntity;
+    while R <> nil do
+    begin
+      if R.IsAnalog and not R.IsParam then
+        List.AddObject('PV',R);
+      if R.IsDigit and not R.IsParam then
+        List.AddObject('PV',R);
+      if R.IsKontur then
+      begin
+        List.AddObject('SP',R);
+        List.AddObject('OP',R);
+      end;
+      R:=R.NextEntity;
+    end;
+    AKind:=Caddy.HistGroups[SelRow].Kind[SelCol];
+    if GetLinkNameDlg(Self,Format('Группа: %d Место: %d',[SelRow,SelCol]),
+                      List,SmallImages,T,AKind) then
+    with Caddy.HistGroups[SelRow] do
+    begin
+      if Assigned(T) then
+      begin
+        Place[SelCol]:=T.PtName;
+        Entity[SelCol]:=T;
+        Kind[SelCol]:=AKind;
+        if T.IsAnalog or T.IsKontur then
+        with T as TCustomAnaOut do
+        begin
+          if AKind = 2 then
+            EU[SelCol]:='%'
+          else
+            EU[SelCol]:=EUDesc;
+          DF[SelCol]:=Ord(PVFormat);
+        end;
+        if T.IsDigit then
+        begin
+          EU[SelCol]:='%';
+          DF[SelCol]:=0;
+        end;
+      end
+      else
+      begin
+        Place[SelCol]:='';
+        Entity[SelCol]:=nil;
+        Kind[SelCol]:=0;
+        EU[SelCol]:='';
+        DF[SelCol]:=1;
+      end;
+      Caddy.HistChanged:=True;
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TShowHistGroupForm.actChangeUpdate(Sender: TObject);
+var OneCell: boolean;
+begin
+  OneCell:=(DrawGrid.Selection.Left = DrawGrid.Selection.Right) and
+           (DrawGrid.Selection.Top = DrawGrid.Selection.Bottom);
+  actChange.Enabled:=Assigned(Caddy.HistGroups[SelRow].Entity[SelCol]) and
+                     OneCell;
+end;
+
+procedure TShowHistGroupForm.actDeleteExecute(Sender: TObject);
+begin
+  if RemxForm.ShowQuestion('Удалить связь "'+
+           String(Caddy.HistGroups[SelRow].Place[SelCol])+'"?')=mrOK then
+  begin
+    Caddy.HistGroups[SelRow].Place[SelCol]:='';
+    Caddy.HistGroups[SelRow].Entity[SelCol]:=nil;
+    Caddy.HistGroups[SelRow].Kind[SelCol]:=0;
+    Caddy.HistGroups[SelRow].EU[SelCol]:='';
+    Caddy.HistGroups[SelRow].DF[SelCol]:=1;
+    Caddy.HistChanged:=True;
+    DrawGrid.Repaint;
+  end;
+end;
+
+procedure TShowHistGroupForm.actDeleteUpdate(Sender: TObject);
+var OneCell: boolean;
+begin
+  OneCell:=(DrawGrid.Selection.Left = DrawGrid.Selection.Right) and
+           (DrawGrid.Selection.Top = DrawGrid.Selection.Bottom);
+  actDelete.Enabled:=Assigned(Caddy.HistGroups[SelRow].Entity[SelCol]) and
+                     OneCell;
+end;
+
+procedure TShowHistGroupForm.FindDialogFind(Sender: TObject);
+var ARow,ACol: integer;
+  function GetGridValue(TheCol,TheRow: integer): string;
+  begin
+    Result:=Caddy.HistGroups[TheRow].Place[TheCol];
+  end;
+begin
+  if frFindNext in FindDialog.Options then
+  begin
+    ARow:=DrawGrid.Row;
+    ACol:=DrawGrid.Col;
+  end
+  else
+  begin
+    ARow:=1;
+    ACol:=1;
+  end;
+  if frDown in FindDialog.Options then
+  begin
+    if frFindNext in FindDialog.Options then
+    begin
+      Inc(ACol);
+      if ACol = DrawGrid.ColCount then
+      begin
+        ACol:=1;
+        Inc(ARow);
+        if ARow = DrawGrid.RowCount then
+        begin
+          RemXForm.ShowInfo('Строка поиска не найдена.');
+          Exit;
+        end;
+      end;
+    end;
+    while ARow < DrawGrid.RowCount do
+    begin
+      if frWholeWord in FindDialog.Options then
+      begin
+        if UpperCase(GetGridValue(ACol,ARow)) =
+           UpperCase(FindDialog.FindText) then
+        begin
+          DrawGrid.Row:=ARow;
+          DrawGrid.Col:=ACol;
+          Exit;
+        end;
+      end
+      else
+      begin
+        if Pos(UpperCase(FindDialog.FindText),
+               UpperCase(GetGridValue(ACol,ARow))) > 0 then
+        begin
+          DrawGrid.Row:=ARow;
+          DrawGrid.Col:=ACol;
+          Exit;
+        end;
+      end;
+      Inc(ACol);
+      if ACol = DrawGrid.ColCount then
+      begin
+        ACol:=1;
+        Inc(ARow);
+      end;
+    end;
+    RemXForm.ShowInfo('Строка поиска не найдена.');
+    Exit;
+  end;
+(*
+  else
+  begin
+    if frFindNext in FindDialog.Options then
+    begin
+      Dec(ACol);
+      if ACol = 0 then
+      begin
+        ACol:=DrawGrid.ColCount-1;
+        Dec(ARow);
+        if ARow = 0 then
+        begin
+          RemXForm.ShowInfo('Строка поиска не найдена.');
+          Exit;
+        end;
+      end;
+    end;
+    while ARow > 0 do
+    begin
+      if frWholeWord in FindDialog.Options then
+      begin
+        if UpperCase(GetGridValue(ACol,ARow)) =
+           UpperCase(FindDialog.FindText) then
+        begin
+          DrawGrid.Row:=ARow;
+          DrawGrid.Col:=ACol;
+          Exit;
+        end;
+      end
+      else
+      begin
+        if Pos(UpperCase(FindDialog.FindText),
+               UpperCase(GetGridValue(ACol,ARow))) > 0 then
+        begin
+          DrawGrid.Row:=ARow;
+          DrawGrid.Col:=ACol;
+          Exit;
+        end;
+      end;
+      Dec(ACol);
+      if ACol = 0 then
+      begin
+        ACol:=DrawGrid.ColCount-1;
+        Dec(ARow);
+      end;
+    end;
+    RemXForm.ShowInfo('Строка поиска не найдена.');
+  end;
+*)
+end;
+
+procedure TShowHistGroupForm.actFindEntityNameExecute(Sender: TObject);
+begin
+  LoadKeyboardLayout('00000409',KLF_ACTIVATE);
+  FindDialog.Execute;
+end;
+
+procedure TShowHistGroupForm.ConnectEntity(Entity: TEntity);
+begin
+// Stub
+end;
+
+procedure TShowHistGroupForm.ConnectImageList(ImageList: TImageList);
+begin
+  SmallImages:=ImageList;
+end;
+
+procedure TShowHistGroupForm.UpdateRealTime;
+var Flag: boolean;
+begin
+  Flag:=(Caddy.UserLevel > 4);
+  actSaveHistGroups.Visible:=Flag;
+  actNew.Visible:=Flag;
+  actChange.Visible:=Flag;
+  actDelete.Visible:=Flag;
+  ToolButton1.Visible:=Flag;
+  ToolButton2.Visible:=Flag;
+  edGroupName.ReadOnly:=not Flag;
+end;
+
+procedure TShowHistGroupForm.FormShow(Sender: TObject);
+begin
+  UpdateRealTime;
+end;
+
+procedure TShowHistGroupForm.FormDestroy(Sender: TObject);
+begin
+  FindDialog.Free;
+end;
+
+end.
