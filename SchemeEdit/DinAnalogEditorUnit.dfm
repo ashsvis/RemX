@@ -1,0 +1,415 @@
+object DinAnalogEditorForm: TDinAnalogEditorForm
+  Left = 312
+  Top = 274
+  ActiveControl = edPtName
+  BorderStyle = bsDialog
+  Caption = #1056#1077#1076#1072#1082#1090#1086#1088' '#1101#1083#1077#1084#1077#1085#1090#1072' "'#1040#1085#1072#1083#1086#1075#1086#1074#1086#1077' '#1079#1085#1072#1095#1077#1085#1080#1077'"'
+  ClientHeight = 334
+  ClientWidth = 616
+  Color = clBtnFace
+  Font.Charset = RUSSIAN_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  KeyPreview = True
+  OldCreateOrder = False
+  Position = poScreenCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 96
+  TextHeight = 14
+  object GroupBox: TGroupBox
+    Left = 416
+    Top = 8
+    Width = 190
+    Height = 249
+    Caption = ' '#1054#1073#1088#1072#1079#1077#1094
+    TabOrder = 1
+    object ScrollBox: TScrollBox
+      Left = 8
+      Top = 16
+      Width = 173
+      Height = 225
+      Color = clGray
+      ParentColor = False
+      TabOrder = 0
+    end
+  end
+  object CloseButton: TButton
+    Left = 421
+    Top = 268
+    Width = 87
+    Height = 25
+    Caption = #1042#1074#1086#1076
+    Default = True
+    ModalResult = 1
+    TabOrder = 3
+  end
+  object PropertyBox: TGroupBox
+    Left = 8
+    Top = 8
+    Width = 401
+    Height = 241
+    Caption = #1057#1074#1086#1081#1089#1090#1074#1072
+    TabOrder = 0
+    object Bevel1: TBevel
+      Left = 8
+      Top = 17
+      Width = 113
+      Height = 216
+    end
+    object Bevel5: TBevel
+      Left = 16
+      Top = 152
+      Width = 97
+      Height = 9
+      Shape = bsTopLine
+    end
+    object Bevel2: TBevel
+      Left = 128
+      Top = 17
+      Width = 265
+      Height = 69
+    end
+    object Bevel3: TBevel
+      Left = 128
+      Top = 93
+      Width = 265
+      Height = 84
+    end
+    object Label2: TLabel
+      Left = 248
+      Top = 24
+      Width = 48
+      Height = 23
+      AutoSize = False
+      Caption = #1064#1080#1088#1080#1085#1072':'
+      Layout = tlCenter
+    end
+    object Label4: TLabel
+      Left = 248
+      Top = 56
+      Width = 44
+      Height = 23
+      AutoSize = False
+      Caption = #1042#1099#1089#1086#1090#1072':'
+      Layout = tlCenter
+    end
+    object Label5: TLabel
+      Left = 136
+      Top = 24
+      Width = 41
+      Height = 23
+      AutoSize = False
+      Caption = #1057#1083#1077#1074#1072':'
+      Layout = tlCenter
+    end
+    object Label6: TLabel
+      Left = 136
+      Top = 56
+      Width = 41
+      Height = 23
+      AutoSize = False
+      Caption = #1057#1074#1077#1088#1093#1091':'
+      Layout = tlCenter
+    end
+    object Label7: TLabel
+      Left = 136
+      Top = 100
+      Width = 65
+      Height = 14
+      Caption = #1062#1074#1077#1090' '#1092#1086#1085#1072':'
+    end
+    object Label1: TLabel
+      Left = 16
+      Top = 184
+      Width = 69
+      Height = 14
+      Caption = #1062#1074#1077#1090' '#1088#1072#1084#1082#1080':'
+      Enabled = False
+    end
+    object Label3: TLabel
+      Left = 137
+      Top = 180
+      Width = 78
+      Height = 14
+      Caption = #1048#1084#1103' '#1087#1086#1079#1080#1094#1080#1080':'
+    end
+    object Label8: TLabel
+      Left = 272
+      Top = 100
+      Width = 44
+      Height = 14
+      Caption = #1064#1088#1080#1092#1090':'
+    end
+    object cbBorder: TCheckBox
+      Left = 16
+      Top = 160
+      Width = 89
+      Height = 17
+      Caption = #1056#1072#1084#1082#1072
+      TabOrder = 4
+      OnClick = cbBorderClick
+    end
+    object cbPanel: TCheckBox
+      Left = 16
+      Top = 24
+      Width = 97
+      Height = 17
+      Caption = #1055#1072#1085#1077#1083#1100
+      TabOrder = 0
+      OnClick = cbPanelClick
+    end
+    object seWidth: TSpinEdit
+      Left = 304
+      Top = 24
+      Width = 55
+      Height = 23
+      Ctl3D = True
+      MaxValue = 1024
+      MinValue = 1
+      ParentCtl3D = False
+      TabOrder = 7
+      Value = 1
+      OnChange = seWidthChange
+    end
+    object seHeight: TSpinEdit
+      Left = 304
+      Top = 56
+      Width = 55
+      Height = 23
+      Ctl3D = True
+      MaxValue = 703
+      MinValue = 1
+      ParentCtl3D = False
+      TabOrder = 8
+      Value = 1
+      OnChange = seHeightChange
+    end
+    object buFont: TButton
+      Left = 271
+      Top = 116
+      Width = 114
+      Height = 25
+      Caption = #1064#1088#1080#1092#1090'...'
+      TabOrder = 10
+      OnClick = buFontClick
+    end
+    object seLeft: TSpinEdit
+      Left = 184
+      Top = 24
+      Width = 55
+      Height = 23
+      Ctl3D = True
+      MaxValue = 0
+      MinValue = 0
+      ParentCtl3D = False
+      TabOrder = 5
+      Value = 1
+    end
+    object seTop: TSpinEdit
+      Left = 184
+      Top = 56
+      Width = 55
+      Height = 23
+      Ctl3D = True
+      MaxValue = 0
+      MinValue = 0
+      ParentCtl3D = False
+      TabOrder = 6
+      Value = 1
+    end
+    object cbUnit: TCheckBox
+      Left = 16
+      Top = 96
+      Width = 97
+      Height = 17
+      Caption = #1056#1072#1079#1084#1077#1088#1085#1086#1089#1090#1100
+      TabOrder = 3
+      OnClick = cbUnitClick
+    end
+    object cbChecks: TCheckBox
+      Left = 16
+      Top = 48
+      Width = 97
+      Height = 17
+      Caption = #1059#1089#1090#1072#1074#1082#1080
+      Enabled = False
+      TabOrder = 1
+      OnClick = cbChecksClick
+    end
+    object cbValue: TCheckBox
+      Left = 16
+      Top = 72
+      Width = 97
+      Height = 17
+      Caption = #1047#1085#1072#1095#1077#1085#1080#1077
+      TabOrder = 2
+      OnClick = cbValueClick
+    end
+    object edPtName: TEdit
+      Left = 137
+      Top = 204
+      Width = 192
+      Height = 22
+      Cursor = crHandPoint
+      ReadOnly = True
+      TabOrder = 9
+      OnClick = edPtNameClick
+    end
+    object btColorBox: TBitBtn
+      Left = 133
+      Top = 116
+      Width = 132
+      Height = 25
+      Caption = #1042#1099#1073#1088#1072#1090#1100'...'
+      TabOrder = 11
+      OnClick = btColorBoxClick
+      Margin = 4
+    end
+    object btBorderColorBox: TBitBtn
+      Left = 13
+      Top = 204
+      Width = 100
+      Height = 25
+      Caption = #1042#1099#1073#1088#1072#1090#1100'...'
+      TabOrder = 12
+      OnClick = btColorBoxClick
+      Margin = 4
+    end
+    object cbTag: TCheckBox
+      Left = 16
+      Top = 120
+      Width = 97
+      Height = 17
+      Caption = #1058#1077#1075
+      TabOrder = 13
+      OnClick = cbTagClick
+    end
+  end
+  object GroupBox1: TGroupBox
+    Left = 8
+    Top = 256
+    Width = 401
+    Height = 73
+    Caption = #1059#1082#1072#1079#1072#1090#1077#1083#1100' '#1073#1072#1088#1072'/'#1091#1088#1086#1074#1085#1103' '
+    TabOrder = 2
+    object Label9: TLabel
+      Left = 256
+      Top = 17
+      Width = 106
+      Height = 14
+      Caption = #1062#1074#1077#1090' '#1073#1072#1088#1072'/'#1091#1088#1086#1074#1085#1103':'
+      Enabled = False
+    end
+    object Bevel6: TBevel
+      Left = 232
+      Top = 16
+      Width = 9
+      Height = 50
+      Shape = bsLeftLine
+    end
+    object Bevel4: TBevel
+      Left = 112
+      Top = 15
+      Width = 9
+      Height = 50
+      Shape = bsLeftLine
+    end
+    object rbLevel: TRadioButton
+      Left = 136
+      Top = 24
+      Width = 73
+      Height = 17
+      Caption = #1059#1088#1086#1074#1077#1085#1100
+      Enabled = False
+      TabOrder = 2
+      OnClick = rbLevelClick
+    end
+    object rbBar: TRadioButton
+      Left = 136
+      Top = 48
+      Width = 73
+      Height = 17
+      Caption = #1041#1072#1088
+      Enabled = False
+      TabOrder = 3
+      OnClick = rbBarClick
+    end
+    object cbBarInverse: TCheckBox
+      Left = 16
+      Top = 48
+      Width = 73
+      Height = 17
+      Caption = #1048#1085#1074#1077#1088#1089#1080#1103
+      Enabled = False
+      TabOrder = 1
+      OnClick = cbBarInverseClick
+    end
+    object cbVisibleBarLevel: TCheckBox
+      Left = 16
+      Top = 24
+      Width = 73
+      Height = 17
+      Caption = #1042#1080#1076#1080#1084#1099#1081
+      TabOrder = 0
+      OnClick = cbVisibleBarLevelClick
+    end
+    object btBarColorBox: TBitBtn
+      Left = 253
+      Top = 40
+      Width = 124
+      Height = 25
+      Caption = #1042#1099#1073#1088#1072#1090#1100'...'
+      TabOrder = 4
+      OnClick = btColorBoxClick
+      Margin = 4
+    end
+  end
+  object CancelButton: TButton
+    Left = 517
+    Top = 268
+    Width = 87
+    Height = 25
+    Cancel = True
+    Caption = #1054#1090#1084#1077#1085#1072
+    ModalResult = 2
+    TabOrder = 4
+  end
+  object FontDialog: TFontDialog
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    Left = 440
+    Top = 112
+  end
+  object ApplicationEvents: TApplicationEvents
+    OnIdle = ApplicationEventsIdle
+    Left = 480
+    Top = 32
+  end
+  object Fresh: TTimer
+    Enabled = False
+    Interval = 500
+    OnTimer = FreshTimer
+    Left = 440
+    Top = 32
+  end
+  object pmColorSelect: TPopupMenu
+    Images = ImageList1
+    OnPopup = pmColorSelectPopup
+    Left = 440
+    Top = 192
+  end
+  object ImageList1: TImageList
+    Left = 440
+    Top = 152
+  end
+  object ColorDialog1: TColorDialog
+    Left = 440
+    Top = 72
+  end
+end

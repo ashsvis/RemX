@@ -1,0 +1,1213 @@
+unit DinAnalogEditorUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ExtCtrls, Spin, EntityUnit, DinElementsUnit, 
+  AppEvnts, Menus, Buttons, ImgList, IniFiles;
+
+type
+  TDinAnalog = class(TDinControl)
+  private
+    Body: record
+            DinType: byte;
+            PtName: string[10];
+            PtParam: string[10];
+            Font: TFontRec;
+            Color: TColor;
+            Framed: Boolean;
+            FrameColor: TColor;
+            ShowPanel: boolean;
+            ShowBar: boolean;
+            ShowLevel: boolean;
+            BarLevelVisible: boolean;
+            BarLevelColor: TColor;
+            BarLevelInverse: boolean;
+            ShowUnit: boolean;
+            ShowChecks: boolean;
+            ShowValue: boolean;
+            Left: Integer;
+            Top: Integer;
+            Width: Integer;
+            Height: Integer;
+            ShowTag: boolean;
+            Reserved2: boolean;
+            Reserved3: boolean;
+            Reserved4: Integer;
+            Reserved5: Integer;
+            Reserved6: Integer;
+          end;
+    First: Boolean;
+    Value,EUHI,EULO: Double;
+    sValue,sEU,LastVal: string;
+    DFColor,LastDFColor: integer;
+    FShowPanel: boolean;
+    FBarLevelInverse: boolean;
+    FFramed: Boolean;
+    FShowChecks: boolean;
+    FShowUnit: boolean;
+    FShowLevel: boolean;
+    FShowBar: boolean;
+    FFrameColor: TColor;
+    FColor: TColor;
+    FBarLevelColor: TColor;
+    FShowValue: boolean;
+    FAlarmStatus: set of TAlarmState;
+    FLogged: boolean;
+    HasAlarm: Boolean;
+    HasConfirm: Boolean;
+    LastHasAlarm: Boolean;
+    LastHasConfirm: Boolean;
+    AlarmFound: boolean;
+    FBarLevelVisible: boolean;
+    FPtName, LastPtName: string;
+    FPtParam: string;
+    FShowTag: boolean;
+    procedure SetBarLevelColor(const Value: TColor);
+    procedure SetBarLevelInverse(const Value: boolean);
+    procedure SetColor(const Value: TColor);
+    procedure SetPtName(const Value: string);
+    procedure SetFrameColor(const Value: TColor);
+    procedure SetFramed(const Value: Boolean);
+    procedure SetShowBar(const Value: boolean);
+    procedure SetShowChecks(const Value: boolean);
+    procedure SetShowUnit(const Value: boolean);
+    procedure SetShowLevel(const Value: boolean);
+    procedure SetShowPanel(const Value: boolean);
+    procedure SetShowValue(const Value: boolean);
+    procedure SetBarLevelVisible(const Value: boolean);
+    procedure SetPtParam(const Value: string);
+    procedure SetShowTag(const Value: boolean);
+  protected
+    procedure Paint; override;
+    function GetLinkName: string; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    function ShowEditor: boolean; override;
+    procedure Assign(Source: TPersistent); override;
+    procedure SaveToStream(Stream: TStream); override;
+    procedure SaveToIniFile(MF: TMemInifile); override;
+    function LoadFromStream(Stream: TStream): integer; override;
+    procedure UpdateData(GetParamVal: TCallbackFunc); override;
+  published
+    property PtName: string read FPtName write SetPtName;
+    property PtParam: string read FPtParam write SetPtParam;
+    property Font;
+    property Color: TColor read FColor write SetColor;
+    property Framed: Boolean read FFramed write SetFramed;
+    property FrameColor: TColor read FFrameColor write SetFrameColor;
+    property ShowPanel: boolean read FShowPanel write SetShowPanel;
+    property ShowBar: boolean read FShowBar write SetShowBar;
+    property ShowLevel: boolean read FShowLevel write SetShowLevel;
+    property BarLevelVisible: boolean read FBarLevelVisible write SetBarLevelVisible;
+    property BarLevelColor: TColor read FBarLevelColor write SetBarLevelColor;
+    property BarLevelInverse: boolean read FBarLevelInverse write SetBarLevelInverse;
+    property ShowUnit: boolean read FShowUnit write SetShowUnit;
+    property ShowChecks: boolean read FShowChecks write SetShowChecks;
+    property ShowValue: boolean read FShowValue write SetShowValue;
+    property ShowTag: boolean read FShowTag write SetShowTag;
+  end;
+
+  TDinAnalogEditorForm = class(TForm)
+    GroupBox: TGroupBox;
+    ScrollBox: TScrollBox;
+    CloseButton: TButton;
+    PropertyBox: TGroupBox;
+    Bevel3: TBevel;
+    Bevel1: TBevel;
+    Label2: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Bevel2: TBevel;
+    cbBorder: TCheckBox;
+    cbPanel: TCheckBox;
+    seWidth: TSpinEdit;
+    seHeight: TSpinEdit;
+    buFont: TButton;
+    seLeft: TSpinEdit;
+    seTop: TSpinEdit;
+    FontDialog: TFontDialog;
+    cbUnit: TCheckBox;
+    cbChecks: TCheckBox;
+    cbValue: TCheckBox;
+    Label1: TLabel;
+    edPtName: TEdit;
+    Label3: TLabel;
+    Bevel5: TBevel;
+    GroupBox1: TGroupBox;
+    Label9: TLabel;
+    rbLevel: TRadioButton;
+    rbBar: TRadioButton;
+    cbBarInverse: TCheckBox;
+    Bevel6: TBevel;
+    cbVisibleBarLevel: TCheckBox;
+    Bevel4: TBevel;
+    ApplicationEvents: TApplicationEvents;
+    Fresh: TTimer;
+    CancelButton: TButton;
+    btColorBox: TBitBtn;
+    pmColorSelect: TPopupMenu;
+    ImageList1: TImageList;
+    btBorderColorBox: TBitBtn;
+    btBarColorBox: TBitBtn;
+    Label8: TLabel;
+    ColorDialog1: TColorDialog;
+    cbTag: TCheckBox;
+    procedure seWidthChange(Sender: TObject);
+    procedure seHeightChange(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure cbVisibleBarLevelClick(Sender: TObject);
+    procedure cbBorderClick(Sender: TObject);
+    procedure cbValueClick(Sender: TObject);
+    procedure cbPanelClick(Sender: TObject);
+    procedure cbUnitClick(Sender: TObject);
+    procedure cbChecksClick(Sender: TObject);
+    procedure rbLevelClick(Sender: TObject);
+    procedure rbBarClick(Sender: TObject);
+    procedure cbBarInverseClick(Sender: TObject);
+    procedure buFontClick(Sender: TObject);
+    procedure ApplicationEventsIdle(Sender: TObject; var Done: Boolean);
+    procedure edPtNameClick(Sender: TObject);
+    procedure FreshTimer(Sender: TObject);
+    procedure Shape1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pmColorSelectPopup(Sender: TObject);
+    procedure btColorBoxClick(Sender: TObject);
+    procedure cbTagClick(Sender: TObject);
+  private
+    Source,Example: TDinAnalog;
+    procedure UpdateButton(Btn: TBitBtn; DC: TColor);
+    procedure ChangeColorClick(Sender: TObject);
+    procedure CustomColorClick(Sender: TObject);
+  public
+  end;
+
+implementation
+
+uses DateUtils, GetLinkNameUnit, VirtualUnit, RemXUnit, KontrastUnit;
+
+{$R *.dfm}
+
+{ TDinAnalog }
+
+procedure TDinAnalog.Assign(Source: TPersistent);
+var C: TDinAnalog;
+begin
+  inherited;
+  C:=Source as TDinAnalog;
+  Font.Assign(C.Font);
+  FPtName:=C.PtName;
+  FPtParam:=C.PtParam;
+  FColor:=C.Color;
+  FFramed:=C.Framed;
+  FFrameColor:=C.FrameColor;
+  FShowPanel:=C.ShowPanel;
+  FShowBar:=C.ShowBar;
+  FShowLevel:=C.ShowLevel;
+  FBarLevelColor:=C.BarLevelColor;
+  FBarLevelInverse:=C.BarLevelInverse;
+  FShowUnit:=C.ShowUnit;
+  FShowChecks:=C.ShowChecks;
+  FShowValue:=C.ShowValue;
+  FShowTag:=C.ShowTag;
+  FBarLevelVisible:=C.BarLevelVisible;
+end;
+
+constructor TDinAnalog.Create(AOwner: TComponent);
+begin
+  inherited;
+  ControlStyle:=ControlStyle+[csOpaque];
+  First:=True;
+  IsLinked:=False;
+  FDinKind:=dkAnalog;
+  Width:=65;
+  Height:=17;
+  Font.Name:='Tahoma';
+  Font.Size:=9;
+  Font.Charset:=RUSSIAN_CHARSET;
+  Font.Color:=clLime;
+  DFColor:=clAqua;
+  Color:=clBlack;
+  FShowValue:=True;
+  FShowBar:=True;
+  FBarLevelColor:=clTeal;
+  FFrameColor:=clSilver;
+  FShowTag:=False;
+  sValue:='------';
+  LastPtName:='';
+  sEU:='';
+  LastVal:='';
+  Value:=0.0;
+  EUHI:=100.0;
+  EULO:=0.0;
+end;
+
+procedure TDinAnalog.Paint;
+const
+   A1: array[1..4] of TAlarmState = (asHH,asHi,asLo,asLL);
+   A2: array[1..4] of TColor = (clRed,clYellow,clYellow,clRed);
+var R,REU,Bar: TRect; V: Double; X, Y, i: integer;
+    AlarmRect: TRect; AlarmColor: TColor; S: string;
+    Bkg: TBackground;
+  procedure PaintAlarmBox(R: TRect; Col: TColor);
+  begin
+    InflateRect(R, -1, -1);
+    with Canvas do
+    begin
+      Pen.Color := clBlack;
+      if sValue = '??????' then
+        Brush.Color := clGray
+      else
+        Brush.Color := Col;
+      Ellipse(R);
+    end;
+  end;
+  procedure DrawRect(R: TRect; Highlight,Shadow: TColor);
+  begin
+    with Canvas do
+    begin
+      Pen.Color:=Highlight;
+      Polyline([Point(R.Left,R.Bottom-1),Point(R.Left,R.Top),
+                Point(R.Right-1,R.Top)]);
+      Polyline([Point(R.Left+1,R.Bottom-1),Point(R.Left+1,R.Top+1),
+                Point(R.Right-1,R.Top+1)]);
+      Pen.Color:=Shadow;
+      Polyline([Point(R.Right-1,R.Top),Point(R.Right-1,R.Bottom-1),
+                Point(R.Left,R.Bottom-1)]);
+      Polyline([Point(R.Right-2,R.Top+1),Point(R.Right-2,R.Bottom-2),
+                Point(R.Left+1,R.Bottom-2)]);
+    end;
+  end;
+begin
+  if Parent is TBackground then Bkg:=TBackground(Parent) else Bkg:=nil;
+  R:=Rect(0,0,Width,Height);
+  with Canvas do
+  begin
+    if Bkg <> nil then
+      CopyRect(R,Bkg.Bitmap.Canvas,BoundsRect)
+    else
+    begin
+      Brush.Color:=clWhite;
+      FillRect(R);
+    end;
+    if FShowPanel then
+    begin
+// Внешний контур панели
+      DrawRect(R,clBtnHighlight,clBtnShadow);
+      InflateRect(R,-2,-2);
+// Уставки сигнализации
+      if FShowChecks then
+      begin
+        Y:=(R.Bottom div 4)-1;
+        X := Y;
+        Brush.Color := clBtnFace;
+        FillRect(Rect(R.Left, R.Top, R.Left+X, R.Bottom));
+        AlarmRect := Rect(R.Left, R.Top, R.Left+X, R.Top+Y);
+        OffsetRect(AlarmRect,0,2);
+        for i := 1 to 4 do
+        begin
+          if FAlarmStatus <> [] then
+          begin
+            if (A1[i] in FAlarmStatus) and FLogged then
+              AlarmColor := A2[i]
+            else
+              AlarmColor := clGray
+          end
+          else
+            AlarmColor := clLime;
+          PaintAlarmBox(AlarmRect, AlarmColor);
+          OffsetRect(AlarmRect,0,Y);
+        end;
+        R.Left := AlarmRect.Right;
+      end;
+      if FShowUnit or FShowTag then
+      begin
+        Font := Self.Font;
+        Font.Size := 8;
+        Brush.Color := clBtnFace;
+        REU := Rect(R.Left,R.Top,R.Right,R.Top+TextHeight(FLinkName));
+        FillRect(REU);
+        Font.Color := clBtnText;
+        if FShowTag and not FShowUnit then S:=FLinkName
+        else
+        if not FShowTag and FShowUnit then S:=sEU
+        else
+        S:=FLinkName+' ['+sEU+']';
+        DrawText(Handle,PChar(S),-1,REU,DT_SINGLELINE+DT_VCENTER+DT_CENTER);
+        R.Top := R.Top + TextHeight(FLinkName);
+      end;
+// Внутренний контур
+      DrawRect(R,clBtnShadow,clBtnHighlight);
+      InflateRect(R,-2,-2);
+    end
+    else
+    begin // когда панель не показывается
+      if FShowTag then
+      begin
+        Font := Self.Font;
+        Font.Size := Self.Font.Size-2;
+        if FShowUnit and FShowValue then
+          REU := Rect(R.Left,R.Top,R.Right-TextWidth(sEU)-4,R.Top+TextHeight(FLinkName))
+        else
+          REU := Rect(R.Left,R.Top,R.Right,R.Top+TextHeight(FLinkName));
+        Font.Color := FFrameColor;
+        Brush.Style := bsClear;
+        DrawText(Handle,PChar(FLinkName),-1,REU,DT_SINGLELINE+DT_VCENTER+DT_CENTER);
+        R.Top := R.Top + TextHeight(FLinkName);
+      end;
+      if FShowUnit then
+      begin
+        Font := Self.Font;
+        if FShowValue then
+          REU := Rect(R.Right-TextWidth(sEU)-4,R.Top,R.Right,R.Bottom)
+        else
+          REU := R;
+        Brush.Style := bsClear;
+(*
+        OffsetRect(REU,1,1);
+        Font.Color := Color;
+        DrawText(Handle,PChar(sEU),-1,REU,DT_SINGLELINE+DT_VCENTER+DT_CENTER);
+        OffsetRect(REU,-1,-1);
+*)
+        Font.Color := FFrameColor;
+        DrawText(Handle,PChar(sEU),-1,REU,DT_SINGLELINE+DT_VCENTER+DT_CENTER);
+        if FShowValue then R.Right := REU.Left;
+      end;
+    end;
+// Фон
+    Brush.Style := bsSolid;
+    Brush.Color:=Self.Color;
+    FillRect(R);
+// Бар или уровень
+    if FBarLevelVisible then
+    begin
+      Bar:=R;
+      try
+        V:=Value;
+        if V > EUHI then V:=EUHI;
+        if V < EULO then V:=EULO;
+        if not (Abs(EUHI-EULO) < 0.0001) then
+        begin
+          if FShowLevel then
+          begin
+            if not FBarLevelInverse then
+              Bar.Top:=Bar.Bottom-Round((Bar.Bottom-Bar.Top)*((V-EULO)/(EUHI-EULO)))
+            else
+              Bar.Bottom:=Bar.Top+Round((Bar.Bottom-Bar.Top)*((V-EULO)/(EUHI-EULO)));
+          end;
+          if FShowBar then
+          begin
+            if not FBarLevelInverse then
+              Bar.Right:=Bar.Left+Round((Bar.Right-Bar.Left)*((V-EULO)/(EUHI-EULO)))
+            else
+              Bar.Left:=Bar.Right-Round((Bar.Right-Bar.Left)*((V-EULO)/(EUHI-EULO)));
+          end;
+        end
+        else
+          Bar.Right:=Bar.Left;
+      except
+        Bar.Right:=Bar.Left;
+      end;
+      Brush.Color:=FBarLevelColor;
+      Brush.Style:=bsSolid;
+      if (Bar.Right > Bar.Left) then FillRect(Bar);
+    end;
+// Значение аналоговой величины
+    if FShowValue then
+    begin
+      Brush.Style:=bsClear;
+      Font:=Self.Font;
+      Font.Color := DFColor;
+      DrawText(Canvas.Handle,PChar(sValue), -1,
+               R,DT_SINGLELINE+DT_VCENTER+DT_CENTER);
+    end
+    else if FShowUnit and not FShowPanel then
+    begin
+      Brush.Style:=bsClear;
+      Font:=Self.Font;
+      Font.Color := FFrameColor;
+      DrawText(Canvas.Handle,PChar(sEU), -1,
+               R,DT_SINGLELINE+DT_VCENTER+DT_CENTER);
+    end;
+    if FFramed then
+    begin
+      Canvas.Brush.Color:=FFrameColor;
+      Canvas.FrameRect(R);
+    end;
+// Рамка элемента пунктирная, если нет других границ, в редакторе
+    if Editing then
+    begin
+      if not FShowPanel and not FFramed then
+      begin
+        Pen.Color:=clSilver;
+        Pen.Style:=psDash;
+        Brush.Style:=bsClear;
+        Rectangle(R);
+        Brush.Style:=bsSolid;
+        Pen.Style:=psSolid;
+      end;
+    end;
+// Курсоры изменения размеров в редакторе
+    if Editing and Focused then Draw8Points(Canvas);
+// При пропаже связи рисуется синяя рамка  // добавлено 08.10.14
+    if not Editing and not IsLinked then   // добавлено 08.10.14
+    begin                                  // добавлено 08.10.14
+      Brush.Color:=clBlue;                 // добавлено 08.10.14
+      FrameRect(R);                        // добавлено 08.10.14
+    end;                                   // добавлено 08.10.14
+// Рамки выбора RunTime
+    if not Editing and Focused then
+    begin
+      Brush.Color:=clAqua;
+      FrameRect(R);
+    end;
+  end;
+end;
+
+procedure TDinAnalog.UpdateData(GetParamVal: TCallbackFunc);
+var E: TEntity; Blink: boolean;
+    sFormat: string; AO: TCustomAnaOut; LastAlarm: TAlarmState;
+begin
+  IsLinked:=False;
+  IsCommand:=False;
+  IsTrend:=False;
+  IsAsked:=True;
+  if FPtName = '' then
+  begin
+    sValue:='------';
+    DFColor:=clAqua;
+    EUHI:=100.0;
+    EULO:=0.0;
+    Value:=0.0;
+    if Editing then
+      Hint:='Аналоговое значение: <>'+#13+
+      Format('Смещение: %d, %d; Размер: %d, %d',[Left,Top,Width,Height])
+    else
+      Hint:='Нет параметра';
+    if (LastVal <> sValue) or (LastDFColor <> DFColor) or First or
+       (LastPtName <> FPtName) then
+    begin
+      First:=False;
+      LastDFColor:=DFColor;
+      LastVal:=sValue;
+      LastPtName:='';
+      Invalidate;
+    end;
+    Exit;
+  end;
+  LinkName:=FPtName;
+  if not GetParamVal(FPtName,E,Blink) then Exit;
+  LinkDesc:=E.PtDesc;
+  IsLinked:=not (asNoLink in E.AlarmStatus);
+  if FPtParam = 'OP' then
+  begin
+    if E.IsParam then
+    with (E as TCustomAnaInp) do
+    begin
+      EUHI:=OPEUHi;
+      EULO:=OPEULo;
+      sEU:=EUDesc;
+      Value:=OP;
+      sFormat:='%.'+Format('%d',[Ord(OPFormat)])+'f';
+      DFColor:=Self.Font.Color;
+      if (asNoLink in AlarmStatus) then
+        DFColor:=clDefault //clBlue    // изменено 08.10.14
+      else
+      begin
+        DFColor:=Self.Font.Color;
+        sValue:=Format(sFormat,[Value]);
+      end;
+      Self.IsCommand:=True;
+      IsTrend:=False;
+      IsAsked:=True;
+      if Editing then
+        Hint:='Аналоговое значение: <'+E.PtName+'>'+#13+
+    Format('Смещение: %d, %d; Размер: %d, %d',[Left,Top,Width,Height])
+      else
+        Hint:=E.PtName+' : '+E.PtDesc;
+      if (LastVal <> sValue) or (LastDFColor <> DFColor) or First then
+      begin
+        First:=False;
+        LastDFColor:=DFColor;
+        LastVal:=sValue;
+        Invalidate;
+      end;
+    end;
+  end;
+  if FPtParam = 'PV' then
+  begin
+    if not E.IsParam then
+    begin
+      AO:=E as TCustomAnaOut;
+      IsTrend:=not (AO is TKontUPZDateTime);
+      IsCommand:=AO.IsCommand;
+      FAlarmStatus:=AO.AlarmStatus;
+      FLogged:=AO.Logged;
+      if AO is TVirtTimeCounter then
+      with AO as TVirtTimeCounter do
+      begin
+        EUHI:=MaxHourValue*OneHour;
+        EULO:=0.0;
+        Value:=ActualTime;
+      end
+      else
+      begin
+        EUHI:=AO.PVEUHi;
+        EULO:=AO.PVEULo;
+        Value:=AO.PV;
+      end;
+      sEU:=AO.EUDesc;
+      sFormat:='%.'+Format('%d',[Ord(AO.PVFormat)])+'f';
+      if (asBadPV in AO.AlarmStatus) or
+          (AO.BadDB <> adNone) and
+         ((asShortBadPV in AO.AlarmStatus) or
+          (asOpenBadPV in AO.AlarmStatus)) then
+        sValue:='------'
+      else
+      begin
+        if (AO is TVirtTimeCounter) or (AO is TKontUPZDateTime) then
+          sValue:=AO.PtText
+        else
+          sValue:=Format(sFormat,[Value]);
+      end;
+      if (asNoLink in AO.AlarmStatus) then
+        DFColor:=clDefault //clBlue    // изменено 08.10.14
+      else
+        DFColor:=Font.Color;
+      AlarmFound:=AO.GetAlarmState(LastAlarm);
+      if AlarmFound then
+      begin
+        HasAlarm:=(LastAlarm in AO.AlarmStatus);
+        HasConfirm:=(LastAlarm in AO.ConfirmStatus);
+        IsAsked:=HasConfirm;
+      end
+      else
+      begin
+        HasAlarm:=False;
+        HasConfirm:=True;
+        IsAsked:=True;
+      end;
+      if LastAlarm in AO.LostAlarmStatus then
+        DFColor:=ADinColor[LastAlarm,(LastAlarm in AO.AlarmStatus),
+                                     (LastAlarm in AO.ConfirmStatus),Blink];
+      if (LastAlarm in AO.AlarmStatus) and
+          (LastAlarm <> asNoLink) then  // добавлено 08.10.14
+        DFColor:=ADinColor[LastAlarm,(LastAlarm in AO.AlarmStatus),
+                                     (LastAlarm in AO.ConfirmStatus),Blink];
+      if (DFColor = clNone) then DFColor:=Color;
+      if (DFColor = clDefault) then DFColor:=Font.Color;
+
+      if Editing then
+        Hint:='Аналоговое значение: <'+AO.PtName+'>'+#13+
+              Format('Смещение: %d, %d; Размер: %d, %d',[Left,Top,Width,Height])
+      else
+        Hint:=AO.PtName+' : '+AO.PtDesc;
+      if (LastVal <> sValue) or (LastDFColor <> DFColor) or
+         First or not HasConfirm or
+         (LastHasAlarm <> HasAlarm) or (LastHasConfirm <> HasConfirm) then
+      begin
+        First:=False;
+        LastDFColor:=DFColor;
+        LastVal:=sValue;
+        LastHasAlarm:=HasAlarm;
+        LastHasConfirm:=HasConfirm;
+        Invalidate;
+      end;
+    end;
+  end;
+end;
+
+procedure TDinAnalog.SetBarLevelColor(const Value: TColor);
+begin
+  if FBarLevelColor <> Value then
+  begin
+    FBarLevelColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetBarLevelInverse(const Value: boolean);
+begin
+  if FBarLevelInverse <> Value then
+  begin
+    FBarLevelInverse := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetColor(const Value: TColor);
+begin
+  if FColor <> Value then
+  begin
+    FColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetPtName(const Value: string);
+begin
+  if FPtName <> Value then
+  begin
+    FPtName := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetPtParam(const Value: string);
+begin
+  if FPtParam <> Value then
+  begin
+    FPtParam := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetFrameColor(const Value: TColor);
+begin
+  if FFrameColor <> Value then
+  begin
+    FFrameColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetFramed(const Value: Boolean);
+begin
+  if FFramed <> Value then
+  begin
+    FFramed := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetShowBar(const Value: boolean);
+begin
+  if FShowBar <> Value then
+  begin
+    FShowBar := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetShowChecks(const Value: boolean);
+begin
+  if FShowChecks <> Value then
+  begin
+    FShowChecks := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetShowUnit(const Value: boolean);
+begin
+  if FShowUnit <> Value then
+  begin
+    FShowUnit := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetShowLevel(const Value: boolean);
+begin
+  if FShowLevel <> Value then
+  begin
+    FShowLevel := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetShowPanel(const Value: boolean);
+begin
+  if FShowPanel <> Value then
+  begin
+    FShowPanel := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalog.SetShowValue(const Value: boolean);
+begin
+  if FShowValue <> Value then
+  begin
+    FShowValue := Value;
+    Invalidate;
+  end;
+end;
+
+function TDinAnalog.ShowEditor: boolean;
+var T: TEntity;
+begin
+  with TDinAnalogEditorForm.Create(Parent) do
+  try
+    Source:=Self;
+    ScrollBox.Color:=(Self.Parent as TBackground).Color;
+    seLeft.Value:=Self.Left;
+    seTop.Value:=Self.Top;
+    Example.Assign(Self);
+    if Example.Width < ScrollBox.ClientWidth then
+      Example.Left:=(ScrollBox.ClientWidth-Example.Width) div 2
+    else
+      Example.Left:=0;
+    if Example.Height < ScrollBox.ClientHeight then
+      Example.Top:=(ScrollBox.ClientHeight-Example.Height) div 2
+    else
+      Example.Top:=0;
+    seWidth.OnChange:=nil;
+    seHeight.OnChange:=nil;
+    cbUnit.OnClick:=nil;
+    cbTag.OnClick:=nil;
+    cbChecks.OnClick:=nil;
+    try
+      buFont.Font.Name:=Example.Font.Name;
+      buFont.Font.Style:=Example.Font.Style;
+      buFont.Caption:=Example.Font.Name+', '+IntToStr(Example.Font.Size);
+      seWidth.MaxValue:=PanelWidth-Example.Left;
+      seWidth.Value:=Example.Width;
+      seHeight.MaxValue:=PanelHeight-Example.Top;
+      seHeight.Value:=Example.Height;
+      cbPanel.Checked:=Example.ShowPanel;
+      cbUnit.Checked:=Example.ShowUnit;
+      cbTag.Checked:=Example.ShowTag;
+      cbChecks.Checked:=Example.ShowChecks;
+      cbValue.Checked:=Example.ShowValue;
+      cbBorder.Checked:=Example.Framed;
+      UpdateButton(btBarColorBox,Example.BarLevelColor);
+      UpdateButton(btBorderColorBox,Example.FrameColor);
+      UpdateButton(btColorBox,Example.Color);
+      cbVisibleBarLevel.Checked:=Example.BarLevelVisible;
+      rbLevel.Checked:=Example.ShowLevel;
+      rbBar.Checked:=Example.ShowBar;
+      cbBarInverse.Checked:=Example.BarLevelInverse;
+      T:=Caddy.Find(Example.PtName);
+      if Assigned(T) then
+        edPtName.Text:=T.PtName+'.'+Example.PtParam
+      else
+        edPtName.Text:='';
+    finally
+      seWidth.OnChange:=seWidthChange;
+      seHeight.OnChange:=seHeightChange;
+      cbUnit.OnClick:=cbUnitClick;
+      cbTag.OnClick:=cbTagClick;
+      cbChecks.OnClick:=cbChecksClick;
+    end;
+    if ShowModal = mrOk then
+    begin
+      Source.Assign(Example);
+      Source.Left:=seLeft.Value;
+      Source.Top:=seTop.Value;
+      Source.Invalidate;
+      Result:=True;
+    end
+    else
+      Result:=False;
+  finally
+    Free;
+  end;
+end;
+
+procedure TDinAnalog.SetBarLevelVisible(const Value: boolean);
+begin
+  if FBarLevelVisible <> Value then
+  begin
+    FBarLevelVisible := Value;
+    Invalidate;
+  end;
+end;
+
+function TDinAnalog.GetLinkName: string;
+//var E: TEntity; Blink: boolean;
+begin
+(*
+  if (FPtName <> '') and GetParamVal(FPtName,E,Blink) and
+     (E is TVirtAnaSel) then
+  begin
+    if Assigned((E as TVirtAnaSel).AnaOut) then
+      Result := (E as TVirtAnaSel).AnaOut.PtName;
+  end
+  else
+*)
+  Result := FLinkName;
+end;
+
+procedure TDinAnalog.SaveToStream(Stream: TStream);
+begin
+  Body.DinType:=DinType;
+  Body.PtName:=PtName;
+  Body.PtParam:=PtParam;
+  Body.FrameColor:=FrameColor;
+  Body.ShowPanel:=ShowPanel;
+  Body.ShowBar:=ShowBar;
+  Body.ShowLevel:=ShowLevel;
+  Body.BarLevelVisible:=BarLevelVisible;
+  Body.BarLevelColor:=BarLevelColor;
+  Body.BarLevelInverse:=BarLevelInverse;
+  Body.ShowUnit:=ShowUnit;
+  Body.ShowChecks:=ShowChecks;
+  Body.ShowValue:=ShowValue;
+  Body.Framed:=Framed;
+  Body.Color:=Color;
+  Body.Font.Name:=Font.Name;
+  Body.Font.Color:=Font.Color;
+  Body.Font.CharSet:=Font.Charset;
+  Body.Font.Size:=Font.Size;
+  Body.Font.Style:=Font.Style;
+  Body.Left:=Left;
+  Body.Top:=Top;
+  Body.Width:=Width;
+  Body.Height:=Height;
+  Body.ShowTag:=ShowTag;
+  Stream.WriteBuffer(Body,SizeOf(Body));
+end;
+
+function TDinAnalog.LoadFromStream(Stream: TStream): integer;
+begin
+  Result:=SizeOf(Body);
+  if (Stream.Size-Stream.Position) < Result then
+  begin
+    Result:=0;
+    Exit;
+  end;
+  Stream.ReadBuffer(Body,Result);
+  FPtName:=Body.PtName;
+  FLinkName:=FPtName;
+  FPtParam:=Body.PtParam;
+  FFrameColor:=Body.FrameColor;
+  FShowPanel:=Body.ShowPanel;
+  FShowBar:=Body.ShowBar;
+  FShowLevel:=Body.ShowLevel;
+  FBarLevelVisible:=Body.BarLevelVisible;
+  FBarLevelColor:=Body.BarLevelColor;
+  FBarLevelInverse:=Body.BarLevelInverse;
+  FShowUnit:=Body.ShowUnit;
+  FShowChecks:=Body.ShowChecks;
+  FShowValue:=Body.ShowValue;
+  FFramed:=Body.Framed;
+  FShowTag:=Body.ShowTag;
+  FColor:=Body.Color;
+  Font.Name:=Body.Font.Name;
+  Font.Color:=Body.Font.Color;
+  Font.Charset:=Body.Font.CharSet;
+  Font.Size:=Body.Font.Size;
+  Font.Style:=Body.Font.Style;
+  SetBounds(Body.Left,Body.Top,Body.Width,Body.Height);
+end;
+
+procedure TDinAnalogEditorForm.seWidthChange(Sender: TObject);
+begin
+  Example.Width:=seWidth.Value;
+  if Example.Width < ScrollBox.ClientWidth then
+    Example.Left:=(ScrollBox.ClientWidth-Example.Width) div 2
+  else
+    Example.Left:=0;
+end;
+
+procedure TDinAnalogEditorForm.seHeightChange(Sender: TObject);
+begin
+  Example.Height:=seHeight.Value;
+  if Example.Height < ScrollBox.ClientHeight then
+    Example.Top:=(ScrollBox.ClientHeight-Example.Height) div 2
+  else
+    Example.Top:=0;
+end;
+
+procedure TDinAnalogEditorForm.FormCreate(Sender: TObject);
+var DC: TDinColor; B: TBitmap;
+begin
+  B:=TBitmap.Create;
+  try
+    B.Width:=ImageList1.Width;
+    B.Height:=ImageList1.Height;
+    for DC:=Low(StringDinColor) to High(StringDinColor) do
+    begin
+      B.Canvas.Brush.Color:=ArrayDinColor[DC];
+      B.Canvas.Pen.Color:=clBlack;
+      B.Canvas.Rectangle(Rect(0,0,B.Width,B.Height));
+      ImageList1.Add(B,nil);
+    end;
+  finally
+    B.Free;
+  end;
+  Example:=TDinAnalog.Create(Self);
+  Example.Parent:=ScrollBox;
+  Fresh.Enabled:=True;
+end;
+
+procedure TDinAnalogEditorForm.FormDestroy(Sender: TObject);
+begin
+  Fresh.Enabled:=False;
+  Example.Free;
+end;
+
+procedure TDinAnalogEditorForm.cbVisibleBarLevelClick(Sender: TObject);
+var Flag: boolean;
+begin
+  Flag:=cbVisibleBarLevel.Checked;
+  Example.BarLevelVisible:=Flag;
+end;
+
+procedure TDinAnalogEditorForm.cbBorderClick(Sender: TObject);
+begin
+  Example.Framed:=cbBorder.Checked;
+end;
+
+procedure TDinAnalogEditorForm.cbValueClick(Sender: TObject);
+begin
+  Example.ShowValue:=cbValue.Checked;
+end;
+
+procedure TDinAnalogEditorForm.cbPanelClick(Sender: TObject);
+begin
+  Example.ShowPanel:=cbPanel.Checked;
+end;
+
+procedure TDinAnalogEditorForm.cbUnitClick(Sender: TObject);
+begin
+  Example.ShowUnit:=cbUnit.Checked;
+end;
+
+procedure TDinAnalogEditorForm.cbChecksClick(Sender: TObject);
+begin
+  Example.ShowChecks:=cbChecks.Checked;
+end;
+
+procedure TDinAnalogEditorForm.rbLevelClick(Sender: TObject);
+begin
+  Example.ShowLevel:=rbLevel.Checked;
+  Example.ShowBar:=rbBar.Checked;
+end;
+
+procedure TDinAnalogEditorForm.rbBarClick(Sender: TObject);
+begin
+  Example.ShowBar:=rbBar.Checked;
+  Example.ShowLevel:=rbLevel.Checked;
+end;
+
+procedure TDinAnalogEditorForm.cbBarInverseClick(Sender: TObject);
+begin
+  Example.BarLevelInverse:=cbBarInverse.Checked;
+end;
+
+procedure TDinAnalogEditorForm.buFontClick(Sender: TObject);
+begin
+  FontDialog.Font.Assign(Example.Font);
+  if FontDialog.Execute then
+  begin
+    Example.Font.Assign(FontDialog.Font);
+    buFont.Font.Name:=Example.Font.Name;
+    buFont.Font.Style:=Example.Font.Style;
+    buFont.Caption:=Example.Font.Name+', '+IntToStr(Example.Font.Size);
+  end;  
+end;
+
+procedure TDinAnalogEditorForm.ApplicationEventsIdle(Sender: TObject;
+  var Done: Boolean);
+var Flag: boolean;
+begin
+  Flag:=Example.BarLevelVisible;
+  cbBarInverse.Enabled:=Flag;
+  rbLevel.Enabled:=Flag;
+  rbBar.Enabled:=Flag;
+  Label9.Enabled:=Flag;
+  btBarColorBox.Enabled:=Flag;
+  Flag:=Example.ShowPanel;
+  cbChecks.Enabled:=Flag;
+  Flag:=cbBorder.Checked;
+  Label1.Enabled:=Flag;
+  btBorderColorBox.Enabled:=Flag;
+end;
+
+procedure TDinAnalogEditorForm.edPtNameClick(Sender: TObject);
+var List: TStringList; T,R: TEntity; Kind: Byte; i: integer;
+begin
+  List:=TStringList.Create;
+  try
+    T:=Caddy.Find(Copy(edPtName.Text,1,Pos('.',edPtName.Text)-1));
+    R:=Caddy.FirstEntity;
+    while R <> nil do
+    begin
+      if R.IsAnalog and R.IsParam then
+        List.AddObject('OP',R)
+      else
+      if R.IsAnalog and not R.IsParam then
+        List.AddObject('PV',R);
+      R:=R.NextEntity;
+    end;
+    Kind:=0;
+    for i:=Low(AParamKind) to High(AParamKind) do
+    if AParamKind[i] = Example.PtParam then
+    begin
+      Kind:=i;
+      Break;
+    end;
+    if GetLinkNameDlg(Self,'Выберите параметр',List,
+                          RemXForm.EntityTypeImageList,T,Kind) then
+    begin
+      if Assigned(T) then
+      begin
+        Example.PtName:=T.PtName;
+        Example.PtParam:=AParamKind[Kind];
+        edPtName.Text:=Example.PtName+'.'+Example.PtParam;
+      end
+      else
+      begin
+        edPtName.Text:='';
+        Example.PtName:='';
+        Example.PtParam:='';
+      end
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TDinAnalogEditorForm.FreshTimer(Sender: TObject);
+begin
+  Example.UpdateData(@GetParamVal);
+end;
+
+procedure TDinAnalogEditorForm.Shape1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  Example.Focused:=False;
+end;
+
+procedure TDinAnalogEditorForm.pmColorSelectPopup(Sender: TObject);
+var DC: TDinColor; M: TMenuItem;
+begin
+  pmColorSelect.Items.Clear;
+  M:=TMenuItem.Create(Self);
+  M.Caption:='Выбрать...';
+  M.ImageIndex:=-1;
+  M.OnClick:=CustomColorClick;
+  pmColorSelect.Items.Add(M);
+  for DC:=Low(StringDinColor) to High(StringDinColor) do
+  begin
+    M:=TMenuItem.Create(Self);
+    M.Caption:=StringDinColor[DC];
+    M.Tag:=Ord(DC);
+    M.OnClick:=ChangeColorClick;
+    M.ImageIndex:=Ord(DC);
+    pmColorSelect.Items.Add(M);
+  end;
+end;
+
+procedure TDinAnalogEditorForm.btColorBoxClick(Sender: TObject);
+var P: TPoint;
+begin
+  pmColorSelect.Tag:=Integer(Sender);
+  with Sender as TBitBtn do
+  begin
+    P:=Self.ClientToScreen(Point(Left+Parent.Left,Top+Height+Parent.Top));
+    pmColorSelect.Popup(P.X,P.Y);
+  end;
+end;
+
+procedure TDinAnalogEditorForm.UpdateButton(Btn: TBitBtn; DC: TColor);
+var B: TBitmap; i: TDinColor; S: string;
+begin
+  B:=TBitmap.Create;
+  try
+    B.Width:=16;
+    B.Height:=16;
+    B.Canvas.Brush.Color:=DC;
+    B.Canvas.Pen.Color:=$00282828;
+    B.Canvas.Rectangle(Rect(1,1,B.Width-1,B.Height-1));
+    S:='Другой...';
+    for i:=Low(ArrayDinColor) to High(ArrayDinColor) do
+    if ArrayDinColor[i] = DC then
+    begin
+      S:=StringDinColor[i];
+      Break;
+    end;
+    Btn.Caption:=S;
+    Btn.Glyph.Assign(B);
+    Btn.Tag:=Integer(DC);
+  finally
+    B.Free;
+  end;
+end;
+
+procedure TDinAnalogEditorForm.ChangeColorClick(Sender: TObject);
+var Btn: TBitBtn; DC: TDinColor;
+begin
+  DC:=TDinColor((Sender as TMenuItem).Tag);
+  Btn:=TBitBtn(pmColorSelect.Tag);
+  UpdateButton(Btn,ArrayDinColor[DC]);
+  if Btn = btColorBox then Example.Color:=ArrayDinColor[DC];
+  if Btn = btBorderColorBox then Example.FrameColor:=ArrayDinColor[DC];
+  if Btn = btBarColorBox then Example.BarLevelColor:=ArrayDinColor[DC];
+end;
+
+procedure TDinAnalogEditorForm.CustomColorClick(Sender: TObject);
+var Btn: TBitBtn; 
+begin
+  Btn:=TBitBtn(pmColorSelect.Tag);
+  ColorDialog1.Color:=TColor(Btn.Tag);
+  if ColorDialog1.Execute then
+  begin
+    if Btn = btColorBox then Example.Color:=ColorDialog1.Color;
+    if Btn = btBorderColorBox then Example.FrameColor:=ColorDialog1.Color;
+    if Btn = btBarColorBox then Example.BarLevelColor:=ColorDialog1.Color;
+    UpdateButton(Btn,ColorDialog1.Color);
+  end;
+end;
+
+procedure TDinAnalog.SaveToIniFile(MF: TMemInifile);
+var SectName: string; i: integer;
+begin
+  i:=MF.ReadInteger('DinTypeCounts','DinAnalog',0);
+  Inc(i);
+  MF.WriteInteger('DinTypeCounts','DinAnalog',i);
+  SectName:=Format('DinAnalog%d',[i]);
+  MF.WriteInteger(SectName,'DinType',DinType);
+  MF.WriteBool(SectName,'Framed',Framed);
+  MF.WriteInteger(SectName,'Color',Color);
+  MF.WriteString(SectName,'FontName',Font.Name);
+  MF.WriteInteger(SectName,'FontColor',Font.Color);
+  MF.WriteInteger(SectName,'FontCharset',Font.Charset);
+  MF.WriteInteger(SectName,'FontSize',Font.Size);
+  MF.WriteBool(SectName,'FontBold',fsBold in Font.Style);
+  MF.WriteBool(SectName,'FontItalic',fsItalic in Font.Style);
+  MF.WriteBool(SectName,'FontUnderline',fsUnderline in Font.Style);
+  MF.WriteBool(SectName,'FontStrikeOut',fsStrikeOut in Font.Style);
+  MF.WriteInteger(SectName,'Left',Left);
+  MF.WriteInteger(SectName,'Top',Top);
+  MF.WriteInteger(SectName,'Width',Width);
+  MF.WriteInteger(SectName,'Height',Height);
+  MF.WriteString(SectName,'PtName',PtName);
+  MF.WriteString(SectName,'PtParam',PtParam);
+  MF.WriteInteger(SectName,'FrameColor',FrameColor);
+  MF.WriteBool(SectName,'ShowPanel',ShowPanel);
+  MF.WriteBool(SectName,'ShowBar',ShowBar);
+  MF.WriteBool(SectName,'ShowLevel',ShowLevel);
+  MF.WriteBool(SectName,'BarLevelVisible',BarLevelVisible);
+  MF.WriteInteger(SectName,'BarLevelColor',BarLevelColor);
+  MF.WriteBool(SectName,'BarLevelInverse',BarLevelInverse);
+  MF.WriteBool(SectName,'ShowUnit',ShowUnit);
+  MF.WriteBool(SectName,'ShowChecks',ShowChecks);
+  MF.WriteBool(SectName,'ShowValue',ShowValue);
+  MF.WriteBool(SectName,'ShowTag',ShowTag);
+end;
+
+procedure TDinAnalog.SetShowTag(const Value: boolean);
+begin
+  if FShowTag <> Value then
+  begin
+    FShowTag := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinAnalogEditorForm.cbTagClick(Sender: TObject);
+begin
+  Example.ShowTag:=cbTag.Checked;
+end;
+
+initialization
+  RegisterClass(TDinAnalog);
+
+end.

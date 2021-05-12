@@ -1,0 +1,747 @@
+unit DinElementsUnit;
+
+interface
+
+uses Windows, Classes, Messages, Graphics, Controls, ExtCtrls, EntityUnit,
+     Contnrs, PngImage1, IniFiles;
+
+type
+   TBackground = class(TCustomControl)
+   private
+     Body: record
+             PictType: integer;
+             PictSize: Int64;
+             Color: TColor;
+             Empty: boolean;
+             Stretch: Boolean;
+             Mozaik: Boolean;
+           end;
+     FGridStep: Byte;
+     FImage: TImage;
+     FEmpty: boolean;
+     FPictExt: string;
+     FPictType: integer;
+     FGraphList: TObjectList;
+     FColor: TColor;
+     FMozaika: boolean;
+     procedure SetGridStep(const Value: Byte);
+     procedure DinJumperClick(var Msg: TMessage); message WM_DinJumperClick;
+     procedure DinButtonClick(var Msg: TMessage); message WM_DinButtonClick;
+     procedure DinKonturClick(var Msg: TMessage); message WM_DinKonturClick;
+     procedure SetColor(const Value: TColor);
+     procedure SetPictTile(const Value: boolean);
+   protected
+     procedure Paint; override;
+   public
+     Editing: Boolean;
+     ShowGrid: Boolean;
+     Bitmap: TBitmap;
+     constructor Create(AOwner: TComponent); override;
+     destructor Destroy; override;
+     procedure LoadFromFile(FileName: string);
+     procedure SaveToFile(FileName: string);
+     procedure Clear;
+     function Empty: boolean;
+     function PictExt: string;
+     procedure SaveToStream(Stream: TStream);
+     procedure SaveToIniFile(MF: TMemInifile);
+     procedure LoadFromStream(Stream: TStream);
+     function GetGraphic: TGraphic;
+     property GridStep: Byte read FGridStep write SetGridStep;
+     property Color: TColor read FColor write SetColor;
+     property PictTile: boolean read FMozaika write SetPictTile;
+     property OnMouseDown;
+     property OnMouseMove;
+     property OnMouseUp;
+     property OnMouseWheel;
+     property PopupMenu;
+   end;
+
+   TFontRec = record
+     Name: string[255];
+     Color: TColor;
+     CharSet: TFontCharSet;
+     Size: Integer;
+     Style: TFontStyles;
+   end;
+
+   TCallbackFunc = function (PtName: string;
+                             var Entity: TEntity; var Blink: boolean): boolean;
+
+   TDinBoundsInfo = procedure (Sender: TObject;
+                               Left,Top,Width,Height: integer) of object;
+   TDinSetFocus = procedure (Sender: TObject; Shift: TShiftState) of object;
+
+   TDinPopupMenu = procedure (Sender: TObject; X,Y: integer;
+                              Shift: TShiftState) of object;
+
+   TDinKind = (dkAnalog,dkDigital,dkKonturSPOP,dkKonturSPMODE,dkKonturOPMODE,
+               dkValve,dkButton,dkInfo,
+               dkInfoConfirm);
+
+   TDinControl = class(TGraphicControl)
+   private
+     Mode: Byte;
+     Capt: Boolean;
+     SP, Delta: TPoint;
+     SB: array[0..8] of TPoint;
+     HP: array[0..8] of array[0..3] of TPoint;
+     HR: array[0..8] of HRgn;
+     MinWidth,MinHeight: Smallint;
+     FTransparent: Boolean;
+     FFocused: Boolean;
+     FBoundsInfo: TDinBoundsInfo;
+     FBoundsMove: TDinBoundsInfo;
+     FSetFocus: TDinSetFocus;
+     FOnPopupMenu: TDinPopupMenu;
+     FBoundsSize: TDinBoundsInfo;
+     FLinkDesc: string;
+     function DefineMode(const X,Y: Smallint): Byte;
+     procedure WMLeftButtonDown(var Msg: TWMMouseMove); message WM_LButtonDown;
+     procedure WMMouseMove(var Msg: TWMMouseMove); message WM_MouseMove;
+     procedure WMLeftButtonUp(var Msg: TWMMouseMove); message WM_LButtonUp;
+     procedure WMRightButtonDown(var Msg: TWMMouseMove); message WM_RButtonDown;
+     procedure Define8Points;
+     procedure SetTransparent(const Value: Boolean);
+     procedure SetFocused(const Value: Boolean);
+     procedure SetBoundsInfo(const Value: TDinBoundsInfo);
+     procedure SetBoundsMove(const Value: TDinBoundsInfo);
+     procedure SetSetFocus(const Value: TDinSetFocus);
+     procedure SetOnPopupMenu(const Value: TDinPopupMenu);
+     procedure SetBoundsSize(const Value: TDinBoundsInfo);
+     function GetLinkDesc: string;
+   protected
+     FDinType: Byte;
+     FLinkName: string;
+     FDinKind: TDinKind;
+     procedure Draw8Points(Canv: TCanvas);
+     function GetLinkName: string; virtual;
+     function GetDinKind: TDinKind; virtual;
+   public
+     Editing: boolean;
+     IsLinked: Boolean;
+     IsSample: Boolean;
+     IsCommand: Boolean;
+     IsTrend: Boolean;
+     IsAsked: boolean;
+     iTop,iLeft,iWidth,iHeight: integer;
+     constructor Create(AOwner: TComponent); override;
+     procedure SetFocus(const Shift: TShiftState = []);
+     function ShowEditor: boolean; virtual; abstract;
+     procedure UpdateData(GetParamVal: TCallbackFunc); virtual;
+     procedure SaveToStream(Stream: TStream); virtual; abstract;
+     procedure SaveToIniFile(MF: TMemInifile); virtual; abstract;
+     function LoadFromStream(Stream: TStream): integer; virtual; abstract;
+     procedure Assign(Source: TPersistent); override;
+     property Focused: Boolean read FFocused write SetFocused;
+     property Transparent: Boolean read FTransparent write SetTransparent;
+     property PopupMenu;
+     property OnDblClick;
+     property LinkName: string read GetLinkName write FLinkName;
+     property LinkDesc: string read GetLinkDesc write FLinkDesc;
+     property DinKind: TDinKind read GetDinKind;
+     property OnBoundsInfo: TDinBoundsInfo read FBoundsInfo write SetBoundsInfo;
+     property OnBoundsMove: TDinBoundsInfo read FBoundsMove write SetBoundsMove;
+     property OnBoundsSize: TDinBoundsInfo read FBoundsSize write SetBoundsSize;
+     property OnSetFocus: TDinSetFocus read FSetFocus write SetSetFocus;
+     property OnPopupMenu: TDinPopupMenu read FOnPopupMenu write SetOnPopupMenu;
+   published
+     property DinType: Byte read FDinType write FDinType;
+   end;
+
+   TDinControlClass = class of TDinControl;
+
+var
+  FileFormats: TStringList;
+  ADin: array of record
+                   Name: TDinControlClass;
+                   Caption: string;
+                   ShortCaption: string;
+                 end;
+
+implementation
+
+uses SysUtils, Jpeg, DinJumperEditorUnit, DinAnalogEditorUnit,
+     DinTextEditorUnit, DinDigitalEditorUnit, DinKonturEditorUnit,
+     DinValveEditorUnit, DinButtonEditorUnit, DinLineEditorUnit,
+     DinNodeEditorUnit, DinUnitEditorUnit;
+
+{ TBackground }
+
+constructor TBackground.Create(AOwner: TComponent);
+begin
+  inherited;
+  Bitmap:=TBitmap.Create;
+  ControlStyle:=ControlStyle+[csOpaque];
+  FGraphList:=TObjectList.Create;
+  FImage:=TImage.Create(Owner);
+  FEmpty:=True;
+  FPictType:=-1;
+  FPictExt:='';
+  FGridStep:=8;
+  FColor:=clBlack;
+  ShowGrid:=True;
+  Editing:=False;
+end;
+
+procedure TBackground.Paint;
+var i,imax,j,jmax: integer;
+    Row,Col: Integer; CR,IR: TRect; NumRows, NumCols: Integer;
+    DotColor: TColor;
+begin
+  inherited;
+  Bitmap.Width:=ClientWidth;
+  Bitmap.Height:=ClientHeight;
+  with Bitmap do
+  begin
+    Canvas.Brush.Color:=FColor;
+    if FColor = clSilver then DotColor := clBlack else DotColor := clSilver;
+    CR:=Rect(0, 0, ClientWidth, ClientHeight);
+    Canvas.FillRect(CR);
+    if Assigned(FImage.Picture.Graphic) then
+    begin
+      if FMozaika then
+      begin
+        IR:=Rect(0,0,FImage.Picture.Width,FImage.Picture.Height);
+        NumRows:=CR.Bottom div IR.Bottom;
+        NumCols:=CR.Right div IR.Right;
+        for Row:=0 to NumRows+1 do
+          for Col:=0 to NumCols+1 do
+            Canvas.Draw(Col*FImage.Picture.Width,Row*FImage.Picture.Height,
+                        FImage.Picture.Graphic);
+      end
+      else
+        Canvas.Draw(0,0,FImage.Picture.Graphic);
+    end;
+    if Editing and ShowGrid then
+    begin
+      imax := ClientHeight div FGridStep;
+      jmax := ClientWidth div FGridStep;
+      for i := 1 to imax do
+        for j := 1 to jmax do
+          Canvas.Pixels[j*FGridStep, i*FGridStep] := DotColor;
+    end;
+  end;
+  Canvas.CopyRect(CR,Bitmap.Canvas,CR);
+end;
+
+procedure TBackground.SetGridStep(const Value: Byte);
+begin
+  FGridStep:=Value;
+  Invalidate;
+end;
+
+procedure TBackground.DinJumperClick(var Msg: TMessage);
+begin
+  PostMessage((Owner as TWinControl).Handle,Msg.Msg,Msg.WParam,Msg.LParam);
+end;
+
+destructor TBackground.Destroy;
+begin
+  FImage.Free;
+  FGraphList.Free;
+  Bitmap.Free;
+  inherited;
+end;
+
+procedure TBackground.LoadFromFile(FileName: string);
+var i: integer;
+begin
+  FImage.Picture.LoadFromFile(FileName);
+  FPictExt:=ExtractFileExt(FileName);
+  if FileFormats.Find(LowerCase(FPictExt),i) then
+    FPictType:=i
+  else
+    FPictType:=-1;
+  FEmpty:=False;
+  Invalidate;
+end;
+
+procedure TBackground.Clear;
+begin
+  FGraphList.Clear;
+  FPictExt:='';
+  FPictType:=-1;
+  FColor:=clBlack;
+  FImage.Free;
+  FEmpty:=True;
+  FMozaika:=False;
+  FImage:=TImage.Create(Owner);
+  Invalidate;
+end;
+
+procedure TBackground.SaveToFile(FileName: string);
+begin
+  FImage.Picture.SaveToFile(FileName);
+end;
+
+function TBackground.Empty: boolean;
+begin
+  Result:=FEmpty;
+end;
+
+function TBackground.PictExt: string;
+begin
+  Result:=FPictExt;
+end;
+
+procedure TBackground.LoadFromStream(Stream: TStream);
+var M: TMemoryStream; A: array of Byte; 
+    NewGraphic: TGraphic; GraphicClass: TGraphicClass;
+begin
+  M:=TMemoryStream.Create;
+  try
+    Stream.ReadBuffer(Body,SizeOf(Body));
+    FPictType:=Body.PictType;
+    FColor:=Body.Color;
+    FMozaika:=Body.Mozaik;
+    if not Body.Empty then
+    begin
+      SetLength(A,Body.PictSize);
+      Stream.ReadBuffer(A[0],Body.PictSize);
+      M.WriteBuffer(A[0],Body.PictSize);
+      M.Position:=0;
+//----------------------------
+      FPictExt:=FileFormats[FPictType];
+      GraphicClass:=TGraphicClass(FileFormats.Objects[FPictType]);
+      NewGraphic := GraphicClass.Create;
+      try
+        NewGraphic.LoadFromStream(M);
+      except
+        NewGraphic.Free;
+        raise;
+      end;
+      FImage.Picture.Graphic.Free;
+      FImage.Picture.Graphic:=NewGraphic;
+      FGraphList.Add(NewGraphic);
+      FEmpty:=False;
+      Invalidate;
+//----------------------------
+    end
+    else
+      FEmpty:=True;
+  finally
+    M.Free;
+  end;
+end;
+
+procedure TBackground.SaveToStream(Stream: TStream);
+var M: TMemoryStream;
+begin
+  M:=TMemoryStream.Create;
+  try
+    if Assigned(FImage.Picture.Graphic) then
+      FImage.Picture.Graphic.SaveToStream(M);
+    Body.Empty:=FEmpty;
+    Body.PictSize:=M.Size;
+    Body.PictType:=FPictType;
+    Body.Color:=FColor;
+    Body.Mozaik:=FMozaika;
+    Stream.WriteBuffer(Body,SizeOf(Body));
+    if not Body.Empty then
+    begin
+      M.Position:=0;
+      M.SaveToStream(Stream);
+    end;
+  finally
+    M.Free;
+  end;
+end;
+
+procedure TBackground.SetColor(const Value: TColor);
+begin
+  if FColor <> Value then
+  begin
+    FColor:=Value;
+    Invalidate;
+  end;
+end;
+
+procedure TBackground.SetPictTile(const Value: boolean);
+begin
+  if FMozaika <> Value then
+  begin
+    FMozaika := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TBackground.DinButtonClick(var Msg: TMessage);
+begin
+  PostMessage((Owner as TWinControl).Handle,Msg.Msg,Msg.WParam,Msg.LParam);
+end;
+
+procedure TBackground.DinKonturClick(var Msg: TMessage);
+begin
+  PostMessage((Owner as TWinControl).Handle,Msg.Msg,Msg.WParam,Msg.LParam);
+end;
+
+procedure TBackground.SaveToIniFile(MF: TMemInifile);
+var SectName: string;
+    M: TMemoryStream;
+begin
+  M:=TMemoryStream.Create;
+  try
+    if Assigned(FImage.Picture.Graphic) then
+      FImage.Picture.Graphic.SaveToStream(M);
+    SectName:='Background';
+    MF.WriteBool(SectName,'Empty',FEmpty);
+    MF.WriteInteger(SectName,'PictSize',M.Size);
+    MF.WriteInteger(SectName,'PictType',FPictType);
+    MF.WriteInteger(SectName,'Color',FColor);
+    MF.WriteBool(SectName,'Mozaika',FMozaika);
+    MF.WriteInteger('Background','PanelWidth',PanelWidth);
+    MF.WriteInteger('Background','PanelHeight',PanelHeight);
+    if not Body.Empty then
+    begin
+      M.Position:=0;
+      MF.WriteBinaryStream(SectName,'Picture',M);
+    end;  
+  finally
+    M.Free;
+  end;
+end;
+
+function TBackground.GetGraphic: TGraphic;
+begin
+  Result:=FImage.Picture.Graphic;
+end;
+
+{ TDinControl }
+
+procedure TDinControl.Assign(Source: TPersistent);
+var C: TDinControl;
+begin
+  C:=Source as TDinControl;
+  Width:=C.Width;
+  Height:=C.Height;
+  FTransparent:=C.Transparent;
+end;
+
+constructor TDinControl.Create(AOwner: TComponent);
+begin
+  inherited;
+  MinWidth:=8;
+  MinHeight:=8;
+  IsLinked:=False;
+  IsCommand:=False;
+  IsSample:=False;
+  IsAsked:=True;
+  FLinkName:='';
+  FLinkDesc:='';
+  ShowHint:=True;
+end;
+
+procedure TDinControl.Define8Points;
+var i:word;
+begin
+  SB[0]:=Point(3,3);
+  SB[1]:=Point(Width div 2,3);
+  SB[2]:=Point(Width-4,3);
+  SB[3]:=Point(Width-4,Height div 2);
+  SB[4]:=Point(Width-4,Height-4);
+  SB[5]:=Point(Width div 2,Height-4);
+  SB[6]:=Point(3,Height-4);
+  SB[7]:=Point(3,Height div 2);
+  SB[8]:=Point(3,3);
+  for i:=0 to 7 do
+  begin
+    HP[i][0]:=Point(SB[i].X-3,SB[i].Y-3);
+    HP[i][1]:=Point(SB[i].X+4,SB[i].Y-3);
+    HP[i][2]:=Point(SB[i].X+4,SB[i].Y+4);
+    HP[i][3]:=Point(SB[i].X-3,SB[i].Y+4);
+  end;
+end;
+
+function TDinControl.DefineMode(const X, Y: Smallint): Byte;
+var i:word;
+begin
+  Define8Points;
+  for i:=0 to 8 do HR[i]:=CreatePolygonRgn(HP[i],4,WINDING);
+  if PtInRegion(HR[0],X,Y) then
+  begin Cursor:=crSizeNWSE; Result:=1; end
+  else
+    if PtInRegion(HR[4],X,Y) then
+    begin Cursor:=crSizeNWSE; Result:=5; end
+    else
+      if PtInRegion(HR[2],X,Y) then
+      begin Cursor:=crSizeNESW; Result:=3; end
+      else
+        if PtInRegion(HR[6],X,Y) then
+        begin Cursor:=crSizeNESW; Result:=7; end
+        else
+          if PtInRegion(HR[1],X,Y) then
+          begin Cursor:=crSizeNS; Result:=2; end
+          else
+            if PtInRegion(HR[5],X,Y) then
+            begin Cursor:=crSizeNS; Result:=6; end
+            else
+              if PtInRegion(HR[3],X,Y) then
+              begin Cursor:=crSizeWE; Result:=4; end
+              else
+                if PtInRegion(HR[7],X,Y) then
+                begin Cursor:=crSizeWE; Result:=8; end
+                else
+                  begin
+                    Cursor:=crSize; //crDefault;
+                    Result:=0;
+                  end;
+   for i:=0 to 8 do DeleteObject(HR[i]);
+end;
+
+procedure TDinControl.Draw8Points(Canv: TCanvas);
+var i: byte;
+begin
+  Define8Points;
+  with Canv do
+  begin
+    if not Capt then
+    begin
+      Pen.Style:=psSolid;
+      Pen.Color:=clWhite;
+      Brush.Style:=bsSolid;
+      Brush.Color:=clBlack;
+      for i:=0 to 7 do
+      begin
+        if not ((Height < 30) and (i in [3,7]) or
+                (Width < 30) and (i in [1,5])) then
+          Rectangle(Rect(HP[i][0].X,HP[i][0].Y,HP[i][2].X,HP[i][2].Y));
+      end;
+    end;
+  end;
+end;
+
+function TDinControl.GetLinkName: string;
+begin
+  Result := FLinkName;
+end;
+
+function TDinControl.GetLinkDesc: string;
+begin
+  Result := FLinkDesc;
+end;
+
+procedure TDinControl.SetBoundsMove(const Value: TDinBoundsInfo);
+begin
+  FBoundsMove := Value;
+end;
+
+procedure TDinControl.SetBoundsInfo(const Value: TDinBoundsInfo);
+begin
+  FBoundsInfo := Value;
+end;
+
+procedure TDinControl.SetFocus(const Shift: TShiftState);
+begin
+  Focused:=True;
+  if Assigned(FSetFocus) then FSetFocus(Self,Shift);
+end;
+
+procedure TDinControl.SetFocused(const Value: Boolean);
+begin
+  if FFocused <> Value then
+  begin
+    FFocused := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinControl.SetOnPopupMenu(const Value: TDinPopupMenu);
+begin
+  FOnPopupMenu := Value;
+end;
+
+procedure TDinControl.SetSetFocus(const Value: TDinSetFocus);
+begin
+  FSetFocus := Value;
+end;
+
+procedure TDinControl.SetTransparent(const Value: Boolean);
+begin
+  FTransparent := Value;
+end;
+
+procedure TDinControl.UpdateData(GetParamVal: TCallbackFunc);
+begin
+// Stub
+end;
+
+procedure TDinControl.WMLeftButtonDown(var Msg: TWMMouseMove);
+var Shift: TShiftState;
+begin
+  inherited;
+  if Editing then
+  begin
+    Mode:=DefineMode(Msg.XPos,Msg.YPos);
+    Delta:=Point(Msg.XPos,Msg.YPos);
+    SP:=Point(Width,Height);
+    iTop:=Top;
+    iLeft:=Left;
+    iWidth:=Width;
+    iHeight:=Height;
+    Capt:=True;
+  end;
+  Shift:=[];
+  if (Msg.Keys and $04) > 0 then Include(Shift,ssShift);
+  if (Msg.Keys and $08) > 0 then Include(Shift,ssCtrl);
+  SetFocus(Shift);
+end;
+
+procedure TDinControl.WMLeftButtonUp(var Msg: TWMMouseMove);
+begin
+  inherited;
+  if Editing and Capt then
+  begin
+    Capt:=False;
+    Invalidate;
+    if Assigned(FBoundsInfo) then
+      FBoundsInfo(Self,iLeft,iTop,iWidth,iHeight);
+  end;
+end;
+
+procedure TDinControl.WMMouseMove(var Msg: TWMMouseMove);
+var lTop,lLeft,lWidth,lHeight: integer;
+begin
+  inherited;
+  if Editing then
+  begin
+    DefineMode(Msg.XPos,Msg.YPos);
+    if Capt then
+    begin
+      case Mode of
+        0: if (Msg.Keys and $04) = 0 then
+           begin // Mode = 0; Перетаскивание
+             lTop:=iTop; lLeft:=iLeft;
+             iTop := BoundsRect.Top + Msg.YPos - Delta.Y;
+             iLeft := BoundsRect.Left + Msg.XPos - Delta.X;
+             if Assigned(FBoundsMove) then FBoundsMove(Self,lLeft-iLeft,
+                                                       lTop-iTop,0,0);
+           end;
+        1: if (Msg.Keys and $04) = 0 then
+           begin
+             lTop:=iTop; lLeft:=iLeft;
+             iTop := BoundsRect.Top + (Msg.YPos - Delta.Y);
+             iLeft := BoundsRect.Left + (Msg.XPos - Delta.X);
+             if Assigned(FBoundsSize) then FBoundsSize(Self,lLeft-iLeft,
+                                                       lTop-iTop,0,0);
+           end;
+        2: if (Msg.Keys and $04) = 0 then
+           begin // Mode 2; Изменение высоты сверху
+             lTop:=iTop;
+             iTop := BoundsRect.Top + (Msg.YPos - Delta.Y);
+             if Assigned(FBoundsSize) then FBoundsSize(Self,0,
+                                                       lTop-iTop,0,0);
+           end;
+        3: if (Msg.Keys and $04) = 0 then
+           begin
+             lTop:=iTop;
+             lWidth:=iWidth;
+             iTop := BoundsRect.Top + (Msg.YPos - Delta.Y);
+             iWidth := SP.X + Msg.XPos - Delta.X;
+             if Assigned(FBoundsSize) then FBoundsSize(Self,0,
+                                                   lTop-iTop,iWidth-lWidth,0);
+           end;
+        4: if (Msg.Keys and $04) = 0 then
+           begin // Mode 4; Изменение ширины справа
+             lWidth:=iWidth;
+             iWidth := SP.X + Msg.XPos - Delta.X;
+             if Assigned(FBoundsSize) then FBoundsSize(Self,0,
+                                                       0,iWidth-lWidth,0);
+           end;
+        5: if (Msg.Keys and $04) = 0 then
+           begin  // Mode 5; Изменение размеров за нижний правый угол
+             lWidth:=iWidth; lHeight:=iHeight;
+             iWidth := SP.X + Msg.XPos - Delta.X;
+             iHeight := SP.Y + Msg.YPos - Delta.Y;
+             if Assigned(FBoundsSize) then FBoundsSize(Self,0,
+                                              0,iWidth-lWidth,iHeight-lHeight);
+           end;
+        6: if (Msg.Keys and $04) = 0 then
+           begin // Mode 6; Изменение высоты снизу
+             lHeight:=iHeight;
+             iHeight := SP.Y + Msg.YPos - Delta.Y;
+             if Assigned(FBoundsSize) then FBoundsSize(Self,0,
+                                                       0,0,iHeight-lHeight);
+           end;
+        7: if (Msg.Keys and $04) = 0 then
+           begin
+             lLeft:=iLeft;
+             lHeight:=iHeight;
+             iHeight := SP.Y + Msg.YPos - Delta.Y;
+             iLeft := BoundsRect.Left + (Msg.XPos - Delta.X);
+             if Assigned(FBoundsSize) then FBoundsSize(Self,lLeft-iLeft,
+                                                        0,0,iHeight-lHeight);
+           end;
+        8: if (Msg.Keys and $04) = 0 then
+           begin // Mode 8; Изменение ширины слева
+             lLeft:=iLeft;
+             iLeft := BoundsRect.Left + (Msg.XPos - Delta.X);
+             if Assigned(FBoundsSize) then FBoundsSize(Self,lLeft-iLeft,
+                                                       0,0,0);
+           end;
+      end; {case}
+    end;
+  end;
+end;
+
+procedure TDinControl.WMRightButtonDown(var Msg: TWMMouseMove);
+var M: TMessage; Shift: TShiftState;
+begin
+  Shift:=[];
+  if (Msg.Keys and $04) > 0 then Include(Shift,ssShift);
+  if (Msg.Keys and $08) > 0 then Include(Shift,ssCtrl);
+  SetFocus(Shift);
+  M.WParamLo:=Msg.XPos;
+  M.WParamHi:=Msg.YPos;
+  if Assigned(FOnPopupMenu) then FOnPopupMenu(Self,Msg.XPos,Msg.YPos,Shift);
+end;
+
+procedure TDinControl.SetBoundsSize(const Value: TDinBoundsInfo);
+begin
+  FBoundsSize := Value;
+end;
+
+function TDinControl.GetDinKind: TDinKind;
+begin
+  Result:=FDinKind;
+end;
+
+initialization
+  FileFormats:=TStringList.Create;
+  with FileFormats do
+  begin
+    FileFormats.Sorted:=True;
+    AddObject('.wmf',TObject(TMetafile));
+    AddObject('.emf',TObject(TMetafile));
+    AddObject('.ico',TObject(TIcon));
+    AddObject('.bmp',TObject(TBitmap));
+    AddObject('.jpg',TObject(TJPEGImage));
+    AddObject('.png',TObject(TPNGImage));
+  end;
+//-------------------------
+  SetLength(ADin,10);
+  ADin[0].Name:=TDinJump;    ADin[0].Caption:='Переход на...';
+                             ADin[0].ShortCaption:='Переход';
+  ADin[1].Name:=TDinAnalog;  ADin[1].Caption:='Аналоговое значение';
+                             ADin[1].ShortCaption:='Аналог';
+  ADin[2].Name:=TDinText;    ADin[2].Caption:='Динамический текст';
+                             ADin[2].ShortCaption:='Текст';
+  ADin[3].Name:=TDinDigital; ADin[3].Caption:='Дискретное значение';
+                             ADin[3].ShortCaption:='Дискрет';
+  ADin[4].Name:=TDinKontur;  ADin[4].Caption:='Контур регулирования';
+                             ADin[4].ShortCaption:='Контур';
+  ADin[5].Name:=TDinValve;   ADin[5].Caption:='Виртуальная задвижка';
+                             ADin[5].ShortCaption:='Задвижка';
+  ADin[6].Name:=TDinButton;  ADin[6].Caption:='Кнопка';
+                             ADin[6].ShortCaption:='Кнопка';
+  ADin[7].Name:=TDinLine;    ADin[7].Caption:='Динамическая линия';
+                             ADin[7].ShortCaption:='Линия';
+  ADin[8].Name:=TDinNoder;   ADin[8].Caption:='Устройство';
+                             ADin[8].ShortCaption:='Устр-во';
+  ADin[9].Name:=TDinUnit;    ADin[9].Caption:='Графический юнит';
+                             ADin[9].ShortCaption:='Граф.юнит';
+
+finalization
+  FileFormats.Free;
+
+end.

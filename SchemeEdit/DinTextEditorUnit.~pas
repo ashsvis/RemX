@@ -1,0 +1,1259 @@
+unit DinTextEditorUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, StdCtrls, Spin, EntityUnit, DinElementsUnit, AppEvnts,
+  Menus, ImgList, Buttons, IniFiles;
+
+type
+  TDinText = class(TDinControl)
+  private
+    Body: record
+            DinType: byte;
+            PtName: string[10];
+            Font: TFontRec;
+            Color: TColor;
+            Text: string[255];
+            ShowPanel: boolean;
+            Solid: Boolean;
+            Framed: Boolean;
+            FrameColor: TColor;
+            Font0: TFontRec;
+            Color0: TColor;
+            Text0: string[255];
+            Font1: TFontRec;
+            Color1: TColor;
+            Text1: string[255];
+            Left: Integer;
+            Top: Integer;
+            Width: Integer;
+            Height: Integer;
+            Reserved1: boolean;
+            Reserved2: boolean;
+            Reserved3: boolean;
+            Reserved4: Integer;
+            Reserved5: Integer;
+            Reserved6: Integer;
+          end;
+    First: Boolean;
+    State: Boolean;
+    LastState: Boolean;
+    LastNoLink: Boolean;
+    HasAlarm: Boolean;
+    HasConfirm: Boolean;
+    LastHasAlarm: Boolean;
+    LastHasConfirm: Boolean;
+    AlarmFound: boolean;
+    Blink: Boolean;
+    FFramed: Boolean;
+    FSolid: Boolean;
+    FShowPanel: boolean;
+    FText1: string;
+    FText0: string;
+    FText: string;
+    FPtName: string;
+    FFrameColor: TColor;
+    FColor: TColor;
+    FColor0: TColor;
+    FColor1: TColor;
+    FFont0: TFont;
+    FFont1: TFont;
+    NoLink: boolean;
+    procedure SetColor(const Value: TColor);
+    procedure SetColor0(const Value: TColor);
+    procedure SetColor1(const Value: TColor);
+    procedure SetFont0(const Value: TFont);
+    procedure SetFont1(const Value: TFont);
+    procedure SetFrameColor(const Value: TColor);
+    procedure SetFramed(const Value: Boolean);
+    procedure SetPtName(const Value: string);
+    procedure SetShowPanel(const Value: boolean);
+    procedure SetSolid(const Value: Boolean);
+    procedure SetText(const Value: string);
+    procedure SetText0(const Value: string);
+    procedure SetText1(const Value: string);
+  protected
+    procedure Paint; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    function ShowEditor: boolean; override;
+    procedure Assign(Source: TPersistent); override;
+    procedure SaveToStream(Stream: TStream); override;
+    procedure SaveToIniFile(MF: TMemInifile); override;
+    function LoadFromStream(Stream: TStream): integer; override;
+    procedure UpdateData(GetParamVal: TCallbackFunc); override;
+  published
+    property PtName: string read FPtName write SetPtName;
+    property Font;
+    property Color: TColor read FColor write SetColor;
+    property Text: string read FText write SetText;
+    property ShowPanel: boolean read FShowPanel write SetShowPanel;
+    property Solid: Boolean read FSolid write SetSolid;
+    property Framed: Boolean read FFramed write SetFramed;
+    property FrameColor: TColor read FFrameColor write SetFrameColor;
+    property Font0: TFont read FFont0 write SetFont0;
+    property Color0: TColor read FColor0 write SetColor0;
+    property Text0: string read FText0 write SetText0;
+    property Font1: TFont read FFont1 write SetFont1;
+    property Color1: TColor read FColor1 write SetColor1;
+    property Text1: string read FText1 write SetText1;
+  end;
+
+  TDinTextEditorForm = class(TForm)
+    PropertyBox: TGroupBox;
+    Bevel3: TBevel;
+    Bevel1: TBevel;
+    Label3: TLabel;
+    Label2: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Bevel2: TBevel;
+    cbPanel: TCheckBox;
+    cbSolid: TCheckBox;
+    edText: TEdit;
+    seWidth: TSpinEdit;
+    seHeight: TSpinEdit;
+    buFont: TButton;
+    seLeft: TSpinEdit;
+    seTop: TSpinEdit;
+    GroupBox: TGroupBox;
+    ScrollBox: TScrollBox;
+    CloseButton: TButton;
+    CancelButton: TButton;
+    gbState0: TGroupBox;
+    Label1: TLabel;
+    Button0: TButton;
+    Label8: TLabel;
+    Edit0: TEdit;
+    gbState1: TGroupBox;
+    Label9: TLabel;
+    Label10: TLabel;
+    Button1: TButton;
+    Edit1: TEdit;
+    Label11: TLabel;
+    edPtName: TEdit;
+    cbBorder: TCheckBox;
+    Bevel4: TBevel;
+    GroupBox1: TGroupBox;
+    ScrollBox0: TScrollBox;
+    GroupBox2: TGroupBox;
+    ScrollBox1: TScrollBox;
+    ApplicationEvents: TApplicationEvents;
+    FontDialog: TFontDialog;
+    Fresh: TTimer;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    ImageList1: TImageList;
+    pmColorSelect: TPopupMenu;
+    ColorDialog1: TColorDialog;
+    btColorBox: TBitBtn;
+    btBorderColorBox: TBitBtn;
+    btColorBox0: TBitBtn;
+    btColorBox1: TBitBtn;
+    procedure seWidthChange(Sender: TObject);
+    procedure seHeightChange(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure cbPanelClick(Sender: TObject);
+    procedure cbSolidClick(Sender: TObject);
+    procedure edTextChange(Sender: TObject);
+    procedure Edit0Change(Sender: TObject);
+    procedure Edit1Change(Sender: TObject);
+    procedure edTextKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure Edit0KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure Edit1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure buFontClick(Sender: TObject);
+    procedure Button0Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure edPtNameClick(Sender: TObject);
+    procedure ApplicationEventsIdle(Sender: TObject; var Done: Boolean);
+    procedure Shape1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FreshTimer(Sender: TObject);
+    procedure cbBorderClick(Sender: TObject);
+    procedure pmColorSelectPopup(Sender: TObject);
+    procedure btColorBoxClick(Sender: TObject);
+  private
+    Source,Example,Example0,Example1: TDinText;
+    procedure UpdateButton(Btn: TBitBtn; DC: TColor);
+    procedure ChangeColorClick(Sender: TObject);
+    procedure CustomColorClick(Sender: TObject);
+  public
+  end;
+
+implementation
+
+uses GetLinkNameUnit, RemXUnit;
+
+{$R *.dfm}
+
+{ TDinText }
+
+procedure TDinText.Assign(Source: TPersistent);
+var C: TDinText;
+begin
+  inherited;
+  C:=Source as TDinText;
+  FPtName:=C.PtName;
+  Font.Assign(C.Font);
+  FColor:=C.Color;
+  FText:=C.Text;
+  FShowPanel:=C.ShowPanel;
+  FSolid:=C.Solid;
+  FFramed:=C.Framed;
+  FFrameColor:=C.FrameColor;
+  Font0.Assign(C.Font0);
+  FColor0:=C.Color0;
+  FText0:=C.Text0;
+  Font1.Assign(C.Font1);
+  FColor1:=C.Color1;
+  FText1:=C.Text1;
+end;
+
+constructor TDinText.Create(AOwner: TComponent);
+begin
+  inherited;
+  First:=True;
+  Width:=65;
+  Height:=17;
+  IsLinked:=False;
+  FDinKind:=dkDigital;
+  Font.Name:='Tahoma';
+  Font.Size:=9;
+  Font.Charset:=RUSSIAN_CHARSET;
+  Font.Color:=clGray;
+  Color:=clBlack;
+  FFrameColor:=clBlue;
+  FText:='';
+  FFont0:=TFont.Create;
+  FFont0.Name:='Tahoma';
+  FFont0.Size:=9;
+  FFont0.Charset:=RUSSIAN_CHARSET;
+  FFont0.Color:=clWhite;
+  Color0:=clRed;
+  FText0:='';
+  FFont1:=TFont.Create;
+  FFont1.Name:='Tahoma';
+  FFont1.Size:=9;
+  FFont1.Charset:=RUSSIAN_CHARSET;
+  FFont1.Color:=clBlack;
+  Color1:=clLime;
+  FText1:='';
+  NoLink:=True;
+end;
+
+destructor TDinText.Destroy;
+begin
+  Font0.Free;
+  Font1.Free;
+  inherited;
+end;
+
+function TDinText.LoadFromStream(Stream: TStream): integer;
+begin
+  Result:=SizeOf(Body);
+  if (Stream.Size-Stream.Position) < Result then
+  begin
+    Result:=0;
+    Exit;
+  end;
+  Stream.ReadBuffer(Body,Result);
+  FPtName:=Body.PtName;
+  FLinkName:=FPtName;
+  FShowPanel:=Body.ShowPanel;
+  FSolid:=Body.Solid;
+  FFramed:=Body.Framed;
+  FFrameColor:=Body.FrameColor;
+  FText:=Body.Text;
+  FColor:=Body.Color;
+  Font.Name:=Body.Font.Name;
+  Font.Color:=Body.Font.Color;
+  Font.Charset:=Body.Font.CharSet;
+  Font.Size:=Body.Font.Size;
+  Font.Style:=Body.Font.Style;
+  FText0:=Body.Text0;
+  FColor0:=Body.Color0;
+  Font0.Name:=Body.Font0.Name;
+  Font0.Color:=Body.Font0.Color;
+  Font0.Charset:=Body.Font0.CharSet;
+  Font0.Size:=Body.Font0.Size;
+  Font0.Style:=Body.Font0.Style;
+  FText1:=Body.Text1;
+  FColor1:=Body.Color1;
+  Font1.Name:=Body.Font1.Name;
+  Font1.Color:=Body.Font1.Color;
+  Font1.Charset:=Body.Font1.CharSet;
+  Font1.Size:=Body.Font1.Size;
+  Font1.Style:=Body.Font1.Style;
+  SetBounds(Body.Left,Body.Top,Body.Width,Body.Height);
+end;
+
+procedure TDinText.Paint;
+var Rct,R: TRect; CurrColor: TColor; Cash: TCanvas; Bmp: TBitmap;
+begin
+  R:=Rect(0,0,Width,Height);
+  Bmp:=TBitmap.Create;
+  try
+    Bmp.Width:=Width;
+    Bmp.Height:=Height;
+    if FSolid then
+      Cash:=Bmp.Canvas
+    else
+      Cash:=Canvas;
+    if FFramed then
+    begin
+      Cash.Brush.Color:=FFrameColor;
+      Cash.FrameRect(R);
+      InflateRect(R,-1,-1);
+    end;
+    if FShowPanel then
+    begin
+// Внешняя выпуклая рамка
+      Cash.Pen.Width:=1;
+      Cash.Pen.Color:=cl3DLight;
+      Cash.MoveTo(R.Left,R.Bottom);
+      Cash.LineTo(R.Left,R.Top);
+      Cash.LineTo(R.Right,R.Top);
+      Cash.Pen.Color:=cl3DDkShadow;
+      Cash.LineTo(R.Right,R.Bottom);
+      Cash.LineTo(R.Left,R.Bottom);
+// Внешняя рамка
+      Cash.Pen.Color:=clBtnFace;
+      Inflaterect(R,-1,-1);
+      Cash.MoveTo(R.Left,R.Bottom);
+      Cash.LineTo(R.Left,R.Top);
+      Cash.LineTo(R.Right,R.Top);
+      Cash.LineTo(R.Right,R.Bottom);
+      Cash.LineTo(R.Left,R.Bottom);
+      Inflaterect(R,-1,-1);
+// Внутренняя вогнутая рамка
+      Cash.Pen.Color:=clBtnShadow;
+      Cash.MoveTo(R.Left,R.Bottom);
+      Cash.LineTo(R.Left,R.Top);
+      Cash.LineTo(R.Right,R.Top);
+      Cash.Pen.Color:=clBtnHighLight;
+      Cash.LineTo(R.Right,R.Bottom);
+      Cash.LineTo(R.Left,R.Bottom);
+      Inflaterect(R,-1,-1);
+      Cash.Pen.Color:=cl3DDkShadow;
+      Cash.MoveTo(R.Left,R.Bottom);
+      Cash.LineTo(R.Left,R.Top);
+      Cash.LineTo(R.Right,R.Top);
+      Cash.Pen.Color:=cl3DLight;
+      Cash.LineTo(R.Right,R.Bottom);
+      Cash.LineTo(R.Left,R.Bottom);
+// Внутренняя рамка
+      Inflaterect(R,-1,-1);
+    end;
+    if FSolid then
+    begin
+      if not IsLinked then
+        Cash.Brush.Color:=Color
+      else
+      begin
+        if State then
+          CurrColor:=Color1
+        else
+          CurrColor:=Color0;
+        if NoLink then CurrColor:=clBlue;  
+        if AlarmFound then
+        begin
+          if HasConfirm then
+            Cash.Brush.Color:=CurrColor
+          else
+          begin
+            if CurrColor = clBlack then
+            begin
+              if Blink then
+                Cash.Brush.Color:=clBlack
+              else
+                Cash.Brush.Color:=$00e2e2e2;
+            end
+            else
+            begin
+              if Blink then
+                Cash.Brush.Color:=CurrColor
+              else
+                Cash.Brush.Color:=$00282828;
+            end;
+          end;
+        end
+        else
+          Cash.Brush.Color:=CurrColor;
+      end;
+      Cash.Pen.Color:=Cash.Brush.Color;
+      if FShowPanel then
+      begin
+        R.Bottom:=R.Bottom+1;
+        R.Right:=R.Right+1;
+      end;
+      Cash.Rectangle(R);
+    end;
+    if not IsLinked then
+    begin
+      Cash.Brush.Style:=bsClear;
+      Cash.Font:=Self.Font;
+      Rct:=R;
+      DrawText(Cash.Handle,PChar(Text),Length(Text),R,
+             DT_CENTER or DT_WORDBREAK or DT_VCENTER or DT_CALCRECT);
+      OffsetRect(R,((Rct.Right-Rct.Left)-(R.Right-R.Left)) div 2,
+                   ((Rct.Bottom-Rct.Top)-(R.Bottom-R.Top)) div 2);
+      DrawText(Cash.Handle,PChar(Text),Length(Text),R,
+             DT_CENTER or DT_WORDBREAK or DT_VCENTER);
+      R:=Rct;
+    end
+    else
+    begin
+      if State then
+      begin
+        Cash.Brush.Style:=bsClear;
+        Cash.Font:=Font1;
+        Rct:=R;
+        DrawText(Cash.Handle,PChar(Text1),Length(Text1),R,
+               DT_CENTER or DT_WORDBREAK or DT_VCENTER or DT_CALCRECT);
+        OffsetRect(R,((Rct.Right-Rct.Left)-(R.Right-R.Left)) div 2,
+                     ((Rct.Bottom-Rct.Top)-(R.Bottom-R.Top)) div 2);
+        DrawText(Cash.Handle,PChar(Text1),Length(Text1),R,
+               DT_CENTER or DT_WORDBREAK or DT_VCENTER);
+        R:=Rct;
+      end
+      else
+      begin
+        Cash.Brush.Style:=bsClear;
+        Cash.Font:=Font0;
+        Rct:=R;
+        DrawText(Cash.Handle,PChar(Text0),Length(Text0),R,
+               DT_CENTER or DT_WORDBREAK or DT_VCENTER or DT_CALCRECT);
+        OffsetRect(R,((Rct.Right-Rct.Left)-(R.Right-R.Left)) div 2,
+                     ((Rct.Bottom-Rct.Top)-(R.Bottom-R.Top)) div 2);
+        DrawText(Cash.Handle,PChar(Text0),Length(Text0),R,
+               DT_CENTER or DT_WORDBREAK or DT_VCENTER);
+        R:=Rct;
+      end;
+    end;
+// Рамки выбора
+    if Editing then
+    begin
+      if not FShowPanel and not FFramed then
+      begin
+        Cash.Pen.Color:=clSilver;
+        Cash.Pen.Style:=psDash;
+        Cash.Brush.Style:=bsClear;
+        Cash.Rectangle(R);
+        Cash.Brush.Style:=bsSolid;
+        Cash.Pen.Style:=psSolid;
+      end;
+    end;
+    if Editing and Focused then Draw8Points(Cash);
+    if not Editing and Focused then
+    begin
+      Cash.Brush.Color:=clYellow;
+      Cash.FrameRect(ClientRect);
+    end;
+    if FSolid then
+      Canvas.Draw(0,0,Bmp);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+procedure TDinText.SaveToIniFile(MF: TMemInifile);
+var SectName: string; i: integer;
+begin
+  i:=MF.ReadInteger('DinTypeCounts','DinText',0);
+  Inc(i);
+  MF.WriteInteger('DinTypeCounts','DinText',i);
+  SectName:=Format('DinText%d',[i]);
+  MF.WriteInteger(SectName,'DinType',DinType);
+  MF.WriteString(SectName,'PtName',PtName);
+  MF.WriteBool(SectName,'ShowPanel',ShowPanel);
+  MF.WriteInteger(SectName,'FrameColor',FrameColor);
+  MF.WriteBool(SectName,'Framed',Framed);
+  MF.WriteBool(SectName,'Solid',Solid);
+  MF.WriteString(SectName,'Text',Text);
+  MF.WriteInteger(SectName,'Color',Color);
+  MF.WriteString(SectName,'FontName',Font.Name);
+  MF.WriteInteger(SectName,'FontColor',Font.Color);
+  MF.WriteInteger(SectName,'FontCharset',Font.Charset);
+  MF.WriteInteger(SectName,'FontSize',Font.Size);
+  MF.WriteBool(SectName,'FontBold',fsBold in Font.Style);
+  MF.WriteBool(SectName,'FontItalic',fsItalic in Font.Style);
+  MF.WriteBool(SectName,'FontUnderline',fsUnderline in Font.Style);
+  MF.WriteBool(SectName,'FontStrikeOut',fsStrikeOut in Font.Style);
+  MF.WriteString(SectName,'Text0',Text0);
+  MF.WriteInteger(SectName,'Color0',Color0);
+  MF.WriteString(SectName,'Font0Name',Font0.Name);
+  MF.WriteInteger(SectName,'Font0Color',Font0.Color);
+  MF.WriteInteger(SectName,'Font0Charset',Font0.Charset);
+  MF.WriteInteger(SectName,'Font0Size',Font0.Size);
+  MF.WriteBool(SectName,'Font0Bold',fsBold in Font0.Style);
+  MF.WriteBool(SectName,'Font0Italic',fsItalic in Font0.Style);
+  MF.WriteBool(SectName,'Font0Underline',fsUnderline in Font0.Style);
+  MF.WriteBool(SectName,'Font0StrikeOut',fsStrikeOut in Font0.Style);
+  MF.WriteString(SectName,'Text1',Text1);
+  MF.WriteInteger(SectName,'Color1',Color1);
+  MF.WriteString(SectName,'Font1Name',Font1.Name);
+  MF.WriteInteger(SectName,'Font1Color',Font1.Color);
+  MF.WriteInteger(SectName,'Font1Charset',Font1.Charset);
+  MF.WriteInteger(SectName,'Font1Size',Font1.Size);
+  MF.WriteBool(SectName,'Font1Bold',fsBold in Font1.Style);
+  MF.WriteBool(SectName,'Font1Italic',fsItalic in Font1.Style);
+  MF.WriteBool(SectName,'Font1Underline',fsUnderline in Font1.Style);
+  MF.WriteBool(SectName,'Font1StrikeOut',fsStrikeOut in Font1.Style);
+  MF.WriteInteger(SectName,'Left',Left);
+  MF.WriteInteger(SectName,'Top',Top);
+  MF.WriteInteger(SectName,'Width',Width);
+  MF.WriteInteger(SectName,'Height',Height);
+end;
+
+procedure TDinText.SaveToStream(Stream: TStream);
+begin
+  Body.DinType:=DinType;
+  Body.PtName:=PtName;
+  Body.ShowPanel:=ShowPanel;
+  Body.Solid:=Solid;
+  Body.Framed:=Framed;
+  Body.FrameColor:=FrameColor;
+  Body.Text:=Text;
+  Body.Color:=Color;
+  Body.Font.Name:=Font.Name;
+  Body.Font.Color:=Font.Color;
+  Body.Font.CharSet:=Font.Charset;
+  Body.Font.Size:=Font.Size;
+  Body.Font.Style:=Font.Style;
+  Body.Text0:=Text0;
+  Body.Color0:=Color0;
+  Body.Font0.Name:=Font0.Name;
+  Body.Font0.Color:=Font0.Color;
+  Body.Font0.CharSet:=Font0.Charset;
+  Body.Font0.Size:=Font0.Size;
+  Body.Font0.Style:=Font0.Style;
+  Body.Text1:=Text1;
+  Body.Color1:=Color1;
+  Body.Font1.Name:=Font1.Name;
+  Body.Font1.Color:=Font1.Color;
+  Body.Font1.CharSet:=Font1.Charset;
+  Body.Font1.Size:=Font1.Size;
+  Body.Font1.Style:=Font1.Style;
+  Body.Left:=Left;
+  Body.Top:=Top;
+  Body.Width:=Width;
+  Body.Height:=Height;
+  Stream.WriteBuffer(Body,SizeOf(Body));
+end;
+
+procedure TDinText.SetColor(const Value: TColor);
+begin
+  if FColor <> Value then
+  begin
+    FColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetColor0(const Value: TColor);
+begin
+  if FColor0 <> Value then
+  begin
+    FColor0 := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetColor1(const Value: TColor);
+begin
+  if FColor1 <> Value then
+  begin
+    FColor1 := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetFont0(const Value: TFont);
+begin
+  FFont0.Assign(Value);
+  Invalidate;
+end;
+
+procedure TDinText.SetFont1(const Value: TFont);
+begin
+  FFont1.Assign(Value);
+  Invalidate;
+end;
+
+procedure TDinText.SetFrameColor(const Value: TColor);
+begin
+  if FFrameColor <> Value then
+  begin
+    FFrameColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetFramed(const Value: Boolean);
+begin
+  if FFramed <> Value then
+  begin
+    FFramed := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetPtName(const Value: string);
+begin
+  if FPtName <> Value then
+  begin
+    FPtName := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetShowPanel(const Value: boolean);
+begin
+  if FShowPanel <> Value then
+  begin
+    FShowPanel := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetSolid(const Value: Boolean);
+begin
+  if FSolid <> Value then
+  begin
+    FSolid := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetText(const Value: string);
+begin
+  if FText <> Value then
+  begin
+    FText := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetText0(const Value: string);
+begin
+  if FText0 <> Value then
+  begin
+    FText0 := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TDinText.SetText1(const Value: string);
+begin
+  if FText1 <> Value then
+  begin
+    FText1 := Value;
+    Invalidate;
+  end;
+end;
+
+function TDinText.ShowEditor: boolean;
+var T: TEntity;
+begin
+  with TDinTextEditorForm.Create(Parent) do
+  try
+    Source:=Self;
+    ScrollBox.Color:=(Self.Parent as TBackground).Color;
+    ScrollBox0.Color:=ScrollBox.Color;
+    ScrollBox1.Color:=ScrollBox.Color;
+    seLeft.Value:=Self.Left;
+    seTop.Value:=Self.Top;
+    Example.Assign(Self);
+    if Example.Width < ScrollBox.ClientWidth then
+      Example.Left:=(ScrollBox.ClientWidth-Example.Width) div 2
+    else
+      Example.Left:=0;
+    if Example.Height < ScrollBox.ClientHeight then
+      Example.Top:=(ScrollBox.ClientHeight-Example.Height) div 2
+    else
+      Example.Top:=0;
+    Example0.Assign(Self);
+    if Example0.Width < ScrollBox0.ClientWidth then
+      Example0.Left:=(ScrollBox0.ClientWidth-Example0.Width) div 2
+    else
+      Example0.Left:=0;
+    if Example0.Height < ScrollBox0.ClientHeight then
+      Example0.Top:=(ScrollBox0.ClientHeight-Example0.Height) div 2
+    else
+      Example0.Top:=0;
+    Example1.Assign(Self);
+    if Example1.Width < ScrollBox1.ClientWidth then
+      Example1.Left:=(ScrollBox1.ClientWidth-Example1.Width) div 2
+    else
+      Example1.Left:=0;
+    if Example1.Height < ScrollBox1.ClientHeight then
+      Example1.Top:=(ScrollBox1.ClientHeight-Example1.Height) div 2
+    else
+      Example1.Top:=0;
+    seWidth.OnChange:=nil;
+    seHeight.OnChange:=nil;
+    edText.OnChange:=nil;
+    Edit0.OnChange:=nil;
+    Edit1.OnChange:=nil;
+    try
+      seWidth.MaxValue:=PanelWidth-Example.Left;
+      seWidth.Value:=Example.Width;
+      seHeight.MaxValue:=PanelHeight-Example.Top;
+      seHeight.Value:=Example.Height;
+      buFont.Font.Name:=Example.Font.Name;
+      buFont.Font.Style:=Example.Font.Style;
+      buFont.Caption:=Example.Font.Name+', '+IntToStr(Example.Font.Size);
+      Button0.Font.Name:=Example.Font0.Name;
+      Button0.Font.Style:=Example.Font0.Style;
+      Button0.Caption:=Example.Font0.Name+', '+IntToStr(Example.Font0.Size);
+      Button1.Font.Name:=Example.Font1.Name;
+      Button1.Font.Style:=Example.Font1.Style;
+      Button1.Caption:=Example.Font1.Name+', '+IntToStr(Example.Font1.Size);
+      UpdateButton(btColorBox,Example.Color);
+      UpdateButton(btColorBox0,Example.Color0);
+      UpdateButton(btColorBox1,Example.Color1);
+      cbSolid.Checked:=Example.Solid;
+      cbPanel.Checked:=Example.ShowPanel;
+      cbBorder.Checked:=Example.Framed;
+      UpdateButton(btBorderColorBox,Example.FrameColor);
+      edText.Text:=Example.Text;
+      Edit0.Text:=Example.Text0;
+      Edit1.Text:=Example.Text1;
+      T:=Caddy.Find(Example.PtName);
+      if Assigned(T) then
+        edPtName.Text:=T.PtName
+      else
+        edPtName.Text:='';
+    finally
+      edText.OnChange:=edTextChange;
+      Edit0.OnChange:=Edit0Change;
+      Edit1.OnChange:=Edit1Change;
+      seWidth.OnChange:=seWidthChange;
+      seHeight.OnChange:=seHeightChange;
+    end;
+    if ShowModal = mrOk then
+    begin
+      Source.Assign(Example);
+      Source.Left:=seLeft.Value;
+      Source.Top:=seTop.Value;
+      Source.Focused:=False;
+      Source.Focused:=True;
+      Result:=True;
+    end
+    else
+      Result:=False;
+  finally
+    Free;
+  end;
+end;
+
+procedure TDinText.UpdateData(GetParamVal: TCallbackFunc);
+var E: TEntity; DOT: TCustomDigOut; DINP: TCustomDigInp;
+    LastAlarm: TAlarmState;
+begin
+  NoLink:=True;
+  IsLinked:=False;
+  IsCommand:=False;
+  if FPtName = '' then
+  begin
+    IsAsked:=True;
+    if Editing then
+      Hint:='Динамический текст: <>'+#13+
+        Format('Смещение: %d, %d; Размер: %d, %d',[Left,Top,Width,Height])
+    else
+      Hint:='';
+    if (LastState <> State) or First then
+    begin
+      First:=False;
+      LastState:=State;
+      Invalidate;
+    end;
+    Exit;
+  end;
+  LinkName:=FPtName;
+  if IsSample then
+  begin
+    NoLink:=False;
+  end
+  else
+  begin
+    if not GetParamVal(FPtName,E,Blink) then Exit;
+    LinkDesc:=E.PtDesc;
+    IsLinked:=True;
+    if E.IsParam then
+    begin
+      DINP:=E as TCustomDigInp;
+      NoLink:=asNoLink in DINP.AlarmStatus;
+      State:=DINP.OP;
+      AlarmFound:=False;
+      HasAlarm:=False;
+      HasConfirm:=True;
+      IsAsked:=True;
+      IsCommand:=True;
+    end
+    else
+    begin
+      DOT:=E as TCustomDigOut;
+      NoLink:=asNoLink in DOT.AlarmStatus;
+      IsCommand:=E.IsVirtual;
+      State:=DOT.PV;
+      AlarmFound:=DOT.GetAlarmState(LastAlarm);
+      if AlarmFound then
+      begin
+        HasAlarm:=(LastAlarm in DOT.AlarmStatus);
+        HasConfirm:=(LastAlarm in DOT.ConfirmStatus);
+        IsAsked:=HasConfirm;
+      end
+      else
+      begin
+        HasAlarm:=False;
+        HasConfirm:=True;
+        IsAsked:=True;
+      end;
+    end;
+  end;
+  if not IsSample then
+  begin
+    if Editing then
+      Hint:='Динамический текст: <'+E.PtName+'>'+#13+
+        Format('Смещение: %d, %d; Размер: %d, %d',[Left,Top,Width,Height])
+    else
+      Hint:=E.PtName+' : '+E.PtDesc;
+  end;
+  if (LastState <> State) or First or not HasConfirm or
+     (LastHasAlarm <> HasAlarm) or (LastHasConfirm <> HasConfirm) or
+     (LastNoLink <> NoLink) then
+  begin
+    First:=False;
+    LastState:=State;
+    LastHasAlarm:=HasAlarm;
+    LastHasConfirm:=HasConfirm;
+    LastNoLink:=NoLink;
+    Invalidate;
+  end;
+end;
+
+procedure TDinTextEditorForm.seWidthChange(Sender: TObject);
+begin
+  Example.Width:=seWidth.Value;
+  if Example.Width < ScrollBox.ClientWidth then
+    Example.Left:=(ScrollBox.ClientWidth-Example.Width) div 2
+  else
+    Example.Left:=0;
+  Example0.Width:=seWidth.Value;
+  if Example0.Width < ScrollBox0.ClientWidth then
+    Example0.Left:=(ScrollBox0.ClientWidth-Example0.Width) div 2
+  else
+    Example0.Left:=0;
+  Example1.Width:=seWidth.Value;
+  if Example1.Width < ScrollBox1.ClientWidth then
+    Example1.Left:=(ScrollBox1.ClientWidth-Example1.Width) div 2
+  else
+    Example1.Left:=0;
+end;
+
+procedure TDinTextEditorForm.seHeightChange(Sender: TObject);
+begin
+  Example.Height:=seHeight.Value;
+  if Example.Height < ScrollBox.ClientHeight then
+    Example.Top:=(ScrollBox.ClientHeight-Example.Height) div 2
+  else
+    Example.Top:=0;
+  Example0.Height:=seHeight.Value;
+  if Example0.Height < ScrollBox0.ClientHeight then
+    Example0.Top:=(ScrollBox0.ClientHeight-Example0.Height) div 2
+  else
+    Example0.Top:=0;
+  Example1.Height:=seHeight.Value;
+  if Example1.Height < ScrollBox1.ClientHeight then
+    Example1.Top:=(ScrollBox1.ClientHeight-Example1.Height) div 2
+  else
+    Example1.Top:=0;
+end;
+
+procedure TDinTextEditorForm.FormCreate(Sender: TObject);
+var DC: TDinColor; B: TBitmap;
+begin
+  B:=TBitmap.Create;
+  try
+    B.Width:=ImageList1.Width;
+    B.Height:=ImageList1.Height;
+    for DC:=Low(StringDinColor) to High(StringDinColor) do
+    begin
+      B.Canvas.Brush.Color:=ArrayDinColor[DC];
+      B.Canvas.Pen.Color:=clBlack;
+      B.Canvas.Rectangle(Rect(0,0,B.Width,B.Height));
+      ImageList1.Add(B,nil);
+    end;
+  finally
+    B.Free;
+  end;
+  Example:=TDinText.Create(Self);
+  Example.Parent:=ScrollBox;
+  Example0:=TDinText.Create(Self);
+  Example0.Parent:=ScrollBox0;
+  Example1:=TDinText.Create(Self);
+  Example1.Parent:=ScrollBox1;
+  Fresh.Enabled:=True;
+end;
+
+procedure TDinTextEditorForm.FormDestroy(Sender: TObject);
+begin
+  Fresh.Enabled:=False;
+  Example.Free;
+  Example0.Free;
+  Example1.Free;
+end;
+
+procedure TDinTextEditorForm.cbPanelClick(Sender: TObject);
+begin
+  Example.ShowPanel:=cbPanel.Checked;
+  Example0.ShowPanel:=cbPanel.Checked;
+  Example1.ShowPanel:=cbPanel.Checked;
+end;
+
+procedure TDinTextEditorForm.cbSolidClick(Sender: TObject);
+begin
+  Example.Solid:=cbSolid.Checked;
+  Example0.Solid:=cbSolid.Checked;
+  Example1.Solid:=cbSolid.Checked;
+end;
+
+procedure TDinTextEditorForm.edTextChange(Sender: TObject);
+begin
+  Example.Text:=edText.Text;
+  Example0.Text:=edText.Text;
+  Example1.Text:=edText.Text;
+end;
+
+procedure TDinTextEditorForm.Edit0Change(Sender: TObject);
+begin
+  Example.Text0:=Edit0.Text;
+  Example0.Text0:=Edit0.Text;
+  Example1.Text0:=Edit0.Text;
+end;
+
+procedure TDinTextEditorForm.Edit1Change(Sender: TObject);
+begin
+  Example.Text1:=Edit1.Text;
+  Example0.Text1:=Edit1.Text;
+  Example1.Text1:=Edit1.Text;
+end;
+
+procedure TDinTextEditorForm.edTextKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    edText.SelectAll;
+    edText.SelStart:=0;
+    Key := 0;
+  end;
+end;
+
+procedure TDinTextEditorForm.Edit0KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    Edit0.SelectAll;
+    Edit0.SelStart:=0;
+    Key := 0;
+  end;
+end;
+
+procedure TDinTextEditorForm.Edit1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    Edit1.SelectAll;
+    Edit1.SelStart:=0;
+    Key := 0;
+  end;
+end;
+
+procedure TDinTextEditorForm.buFontClick(Sender: TObject);
+begin
+  FontDialog.Font.Assign(Example.Font);
+  if FontDialog.Execute then
+  begin
+    Example.Font:=FontDialog.Font;
+    Example0.Font:=FontDialog.Font;
+    Example1.Font:=FontDialog.Font;
+    buFont.Font.Name:=Example.Font.Name;
+    buFont.Font.Style:=Example.Font.Style;
+    buFont.Caption:=Example.Font.Name+', '+IntToStr(Example.Font.Size);
+  end;
+end;
+
+procedure TDinTextEditorForm.Button0Click(Sender: TObject);
+begin
+  FontDialog.Font.Assign(Example.Font0);
+  if FontDialog.Execute then
+  begin
+    Example.Font0:=FontDialog.Font;
+    Example0.Font0:=FontDialog.Font;
+    Example1.Font0:=FontDialog.Font;
+    Button0.Font.Name:=Example.Font0.Name;
+    Button0.Font.Style:=Example.Font0.Style;
+    Button0.Caption:=Example.Font0.Name+', '+IntToStr(Example.Font0.Size);
+  end;
+end;
+
+procedure TDinTextEditorForm.Button1Click(Sender: TObject);
+begin
+  FontDialog.Font.Assign(Example.Font1);
+  if FontDialog.Execute then
+  begin
+    Example.Font1:=FontDialog.Font;
+    Example0.Font1:=FontDialog.Font;
+    Example1.Font1:=FontDialog.Font;
+    Button1.Font.Name:=Example.Font1.Name;
+    Button1.Font.Style:=Example.Font1.Style;
+    Button1.Caption:=Example.Font1.Name+', '+IntToStr(Example.Font1.Size);
+  end;
+end;
+
+procedure TDinTextEditorForm.edPtNameClick(Sender: TObject);
+var List: TStringList; T,R: TEntity; Kind: Byte;
+begin
+  List:=TStringList.Create;
+  try
+    T:=Caddy.Find(edPtName.Text);
+    R:=Caddy.FirstEntity;
+    while R <> nil do
+    begin
+      if R.IsDigit and R.IsParam then
+        List.AddObject('OP',R);
+      if R.IsDigit and not R.IsParam then
+        List.AddObject('PV',R);
+      R:=R.NextEntity;
+    end;
+    if Assigned(T) then
+    begin
+      if T.IsParam then
+        Kind:=2
+      else
+        Kind:=0;
+    end
+    else
+      Kind:=0;
+    if GetLinkNameDlg(Self,'Выберите параметр',List,
+                          RemXForm.EntityTypeImageList,T,Kind) then
+    begin
+      if Assigned(T) then
+      begin
+        edPtName.Text:=T.PtName;
+        edPtName.SelectAll;
+        Example.PtName:=Trim(edPtName.Text);
+        Example0.PtName:=Trim(edPtName.Text);
+        Example1.PtName:=Trim(edPtName.Text);
+      end
+      else
+      begin
+        edPtName.Text:='';
+        Example.PtName:='';
+        Example0.PtName:='';
+        Example1.PtName:='';
+      end
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TDinTextEditorForm.ApplicationEventsIdle(Sender: TObject;
+  var Done: Boolean);
+var Flag: boolean;
+begin
+  Flag:=Trim(Example.PtName) <> '';
+  Example.Visible:=not Flag;
+  Example0.Visible:=Flag;
+  Example1.Visible:=Flag;
+  Label7.Enabled:=not Flag;
+  btColorBox.Enabled:=not Flag;
+  buFont.Enabled:=not Flag;
+  Label3.Enabled:=not Flag;
+  edText.Enabled:=not Flag;
+  Label1.Enabled:=Flag;
+  btColorBox0.Enabled:=Flag;
+  Button0.Enabled:=Flag;
+  Label8.Enabled:=Flag;
+  Edit0.Enabled:=Flag;
+  Label9.Enabled:=Flag;
+  btColorBox1.Enabled:=Flag;
+  Button1.Enabled:=Flag;
+  Label10.Enabled:=Flag;
+  Edit1.Enabled:=Flag;
+//-------------------------------
+  Flag:=cbBorder.Checked;
+  btBorderColorBox.Enabled:=Flag;
+end;
+
+procedure TDinTextEditorForm.Shape1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  Example.Focused:=False;
+  Example0.Focused:=False;
+  Example1.Focused:=False;
+end;
+
+procedure TDinTextEditorForm.FreshTimer(Sender: TObject);
+begin
+  Example0.IsSample:=True;
+  Example0.IsLinked:=True;
+  Example0.State:=False;
+  Example0.NoLink:=False;
+  Example0.Invalidate;
+  Example1.IsSample:=True;
+  Example1.IsLinked:=True;
+  Example1.State:=True;
+  Example1.NoLink:=False;
+  Example1.Invalidate;
+end;
+
+procedure TDinTextEditorForm.cbBorderClick(Sender: TObject);
+begin
+  Example.Framed:=cbBorder.Checked;
+  Example0.Framed:=cbBorder.Checked;
+  Example1.Framed:=cbBorder.Checked;
+end;
+
+procedure TDinTextEditorForm.pmColorSelectPopup(Sender: TObject);
+var DC: TDinColor; M: TMenuItem;
+begin
+  pmColorSelect.Items.Clear;
+  M:=TMenuItem.Create(Self);
+  M.Caption:='Выбрать...';
+  M.ImageIndex:=-1;
+  M.OnClick:=CustomColorClick;
+  pmColorSelect.Items.Add(M);
+  for DC:=Low(StringDinColor) to High(StringDinColor) do
+  begin
+    M:=TMenuItem.Create(Self);
+    M.Caption:=StringDinColor[DC];
+    M.Tag:=Ord(DC);
+    M.OnClick:=ChangeColorClick;
+    M.ImageIndex:=Ord(DC);
+    pmColorSelect.Items.Add(M);
+  end;
+end;
+
+procedure TDinTextEditorForm.ChangeColorClick(Sender: TObject);
+var Btn: TBitBtn; DC: TDinColor;
+begin
+  DC:=TDinColor((Sender as TMenuItem).Tag);
+  Btn:=TBitBtn(pmColorSelect.Tag);
+  UpdateButton(Btn,ArrayDinColor[DC]);
+  if Btn = btColorBox then
+  begin
+    Example.Color:=ArrayDinColor[DC];
+    Example0.Color:=ArrayDinColor[DC];
+    Example1.Color:=ArrayDinColor[DC];
+  end;
+  if Btn = btBorderColorBox then
+  begin
+    Example.FrameColor:=ArrayDinColor[DC];
+    Example0.FrameColor:=ArrayDinColor[DC];
+    Example1.FrameColor:=ArrayDinColor[DC];
+  end;
+  if Btn = btColorBox0 then
+  begin
+    Example.Color0:=ArrayDinColor[DC];
+    Example0.Color0:=ArrayDinColor[DC];
+    Example1.Color0:=ArrayDinColor[DC];
+  end;
+  if Btn = btColorBox1 then
+  begin
+    Example.Color1:=ArrayDinColor[DC];
+    Example0.Color1:=ArrayDinColor[DC];
+    Example1.Color1:=ArrayDinColor[DC];
+  end;
+end;
+
+procedure TDinTextEditorForm.CustomColorClick(Sender: TObject);
+var Btn: TBitBtn;
+begin
+  Btn:=TBitBtn(pmColorSelect.Tag);
+  ColorDialog1.Color:=TColor(Btn.Tag);
+  if ColorDialog1.Execute then
+  begin
+    if Btn = btColorBox then
+    begin
+      Example.Color:=ColorDialog1.Color;
+      Example0.Color:=ColorDialog1.Color;
+      Example1.Color:=ColorDialog1.Color;
+    end;
+    if Btn = btBorderColorBox then
+    begin
+      Example.FrameColor:=ColorDialog1.Color;
+      Example0.FrameColor:=ColorDialog1.Color;
+      Example1.FrameColor:=ColorDialog1.Color;
+    end;
+    if Btn = btColorBox0 then
+    begin
+      Example.Color0:=ColorDialog1.Color;
+      Example0.Color0:=ColorDialog1.Color;
+      Example1.Color0:=ColorDialog1.Color;
+    end;
+    if Btn = btColorBox1 then
+    begin
+      Example.Color1:=ColorDialog1.Color;
+      Example0.Color1:=ColorDialog1.Color;
+      Example1.Color1:=ColorDialog1.Color;
+    end;
+    UpdateButton(Btn,ColorDialog1.Color);
+  end;
+end;
+
+procedure TDinTextEditorForm.UpdateButton(Btn: TBitBtn; DC: TColor);
+var B: TBitmap; i: TDinColor; S: string;
+begin
+  B:=TBitmap.Create;
+  try
+    B.Width:=16;
+    B.Height:=16;
+    B.Canvas.Brush.Color:=DC;
+    B.Canvas.Pen.Color:=$00282828;
+    B.Canvas.Rectangle(Rect(1,1,B.Width-1,B.Height-1));
+    S:='Другой...';
+    for i:=Low(ArrayDinColor) to High(ArrayDinColor) do
+    if ArrayDinColor[i] = DC then
+    begin
+      S:=StringDinColor[i];
+      Break;
+    end;
+    Btn.Caption:=S;
+    Btn.Glyph.Assign(B);
+    Btn.Tag:=Integer(DC);
+  finally
+    B.Free;
+  end;
+end;
+
+procedure TDinTextEditorForm.btColorBoxClick(Sender: TObject);
+var P: TPoint;
+begin
+  pmColorSelect.Tag:=Integer(Sender);
+  with Sender as TBitBtn do
+  begin
+    P:=Self.ClientToScreen(Point(Left+Parent.Left,Top+Height+Parent.Top));
+    pmColorSelect.Popup(P.X,P.Y);
+  end;
+end;
+
+initialization
+  RegisterClass(TDinText);
+
+end.
