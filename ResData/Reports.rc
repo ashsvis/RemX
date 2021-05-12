@@ -1,0 +1,13 @@
+SplashTemplate RCDATA Splash.ZIP
+TrendReport RCDATA TrendReport.frf
+AlarmReport RCDATA AlarmReport.frf
+SwitchReport RCDATA SwitchReport.frf
+ChangeReport RCDATA ChangeReport.frf
+SystemReport RCDATA SystemReport.frf
+TableReport RCDATA TableReport.frf
+ResetReport RCDATA ResetReport.frf
+ScreenReport RCDATA ScreenReport.frf
+DensTable RCDATA TABLE.txt
+HiAlarm wave buzzer.wav
+LoAlarm wave RING.wav
+EuAlarm wave Infected.wav
