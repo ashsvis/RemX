@@ -1,0 +1,431 @@
+<HTML><BODY bgcolor=E7E3E7 text=000000>
+
+FastReport 2.4<br>
+for Delphi 2-7 &amp; C++Builder 1-6<br>
+<br>
+<br>
+READ THIS FILE ACCURATELY BEFORE INSTALLING FR2.4!<br>
+<br>
+----------------------------------------------------------------------------<br>
+TABLE OF CONTENTS<br>
+<br>
+1. Introduction<br>
+2. Capabilities<br>
+3. Installing<br>
+4. Backward compatibility<br>
+5. Ordering<br>
+6. Notes<br>
+7. Credits<br>
+8. Other products recommended to use<br>
+<br>
+----------------------------------------------------------------------------<br>
+1. INTRODUCTION<br>
+&nbsp;&nbsp; FastReport is reporting tool component. It consists of report engine,<br>
+designer and preview. It written on 100% Object Pascal and can be installed<br>
+in Delphi 2-7 and C++Builder 1-6. Also available cross-platform version<br>
+FR CLX for Delphi 6, C++ Builder 6 and Kylix 1,2 - check out webpage to <br>
+get latest information. <br>
+<br>
+&nbsp;&nbsp; FastReport 2.4 is SHAREWARE. See &quot;Ordering&quot; topic for details.<br>
+<br>
+<br>
+----------------------------------------------------------------------------<br>
+2. CAPABILITIES<br>
+- Fast, compact and flexible code allows you to extend FR functionality.<br>
+&nbsp;&nbsp;No additional DLLs needed.<br>
+- Built-in powerful and easy-to-use designer (also available in run-time).<br>
+- Suitable MSWord-like report preview with &quot;Search text&quot; and &quot;Edit&quot; functions.<br>
+- Set of most useful components: Text, Line, Picture, Shape, OLE, RichText,<br>
+&nbsp;&nbsp;Chart, Barcode. You can also write your own components.<br>
+- Ability to export your reports to other formats (such as TXT, RTF, CSV,<br>
+&nbsp;&nbsp;HTML, PDF and other). <br>
+- Built-in Pascal-like language allows you write code without programming<br>
+&nbsp;&nbsp;in Delphi. It allows you to create reports that can't be created in other<br>
+&nbsp;&nbsp;tools.<br>
+- Script editor with syntax highligt.<br>
+- FR reports can contain dialogue forms that you can use to ask<br>
+&nbsp;&nbsp;parameters before prepare a report. You can have as many dialogs as you need.<br>
+&nbsp;&nbsp;FR uses the same designer for dialogs and have set of standart dialog<br>
+&nbsp;&nbsp;controls like Button, Edit, CheckBox and other.<br>
+- Set of DB engines for FR allow you to create table/query/database components<br>
+&nbsp;&nbsp;in run-time. Your reports can be completely independent of your application!<br>
+- FR can obtain data from tables and queries, arrays and data files - from<br>
+&nbsp;&nbsp;any source. FR is not BDE-dependent, you can use it with *any* DB library<br>
+&nbsp;&nbsp;that is based on standard TDataset component. You can also use FR with<br>
+&nbsp;&nbsp;IB_Objects - powerful and wide-known library for Interbase DBMS.<br>
+- Localization in 19 languages. You can use FR in international applications.<br>
+- Full Bi-directional text output.<br>
+<br>
+<br>
+----------------------------------------------------------------------------<br>
+3. INSTALLING<br>
+&nbsp;&nbsp; Before installing, remove any other version of FastReport from the Delphi<br>
+component palette. Create a folder under your Delphi folder, typically FR240<br>
+and decompress the files in 240core.zip and 240reg.zip to this directory.<br>
+! USE WINZIP or WINRAR - ARCHIVE CONTAINS LONG FILE NAMES !<br>
+<br>
+&nbsp;&nbsp; FR2.4 includes full source code. Trial version contains almost all sources<br>
+(only one compiled unit). Before installing, you should copy this unit<br>
+from ..\FR\LIB_DX to ..\FR\SOURCE.<br>
+! DON'T CHANGE ANYTHING IN FR.INC FILE OF TRIAL FR VERSION !<br>
+<br>
+3.1. Delphi 2.0<br>
+&nbsp;&nbsp; Copy file FR_Class.dcu from ..\FR\LIB_D2 to ..\FR\SOURCE (if you evaluating<br>
+FR). <br>
+&nbsp;&nbsp; If you have TChart or TeeChartPro open the file \fr240\source\FR.inc<br>
+with any text editor and uncomment the required string, then save the file -<br>
+this will allow the TfrChart component to be installed.<br>
+&nbsp;&nbsp; Now open Delphi 2 and select close all from the file menu this will close<br>
+the default starting project. Select Install from the component menu select<br>
+add the select browse in the dialog box select the source folder under the<br>
+folder to which you installed FastReport then select FR_REG.PAS file, click<br>
+Ok, when you return to the install dialog window click Ok again and your<br>
+library should recompile.<br>
+&nbsp;&nbsp; If you have any problems see installing components in your Delphi Manual.<br>
+Note: You should make a backup copy of the Delphi CMPLIB32.DCL AND SAVE IT<br>
+IN A DIFFERENT FOLDER - THIS WILL ALLOW YOU TO REPLACE YOUR LIBRARY IF IT<br>
+FAILS TO COMPILE .<br>
+&nbsp;&nbsp; After compiling, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs appears in Delphi's<br>
+components palette. AFTER INSTALLING YOU SHOULD REBOOT DELPHI!<br>
+&nbsp;&nbsp; For adding FR help file to the Delphi help system, you should:<br>
+- copy files from ..\FR\Help\English to ..\Delphi2\Help;<br>
+- make reserved copy of file ..\Delphi2\BIN\Delphi.hdx;<br>
+- run ..\Delphi2\HELP\TOOLS\HelpInst.exe;<br>
+- open file ..\Delphi2\BIN\Delphi.hdx and choose &quot;Keywords/Add Keyword File&quot;;<br>
+- open file FR.kwf from ..\Delphi2\HELP;<br>
+- save all work by &quot;File/Save&quot; menu command;<br>
+- add the following lines to ..\Delphi2\Help\Delphi.cnt:<br>
+:Index FastReport Reference=FR.hlp<br>
+:Link FR.hlp<br>
+<br>
+3.2. Delphi 3.0<br>
+&nbsp;&nbsp; Copy file FR_Class.dcu from ..\FR\LIB_D3 to ..\FR\SOURCE (if you evaluating<br>
+FR).<br>
+&nbsp;&nbsp; Run Delphi, choose &quot;File/Open...&quot; menu command and open package<br>
+FR3.dpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into Delphi.<br>
+&nbsp;&nbsp; After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs appears in Delphi's<br>
+components palette. AFTER INSTALLING YOU SHOULD REBOOT DELPHI!<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+&nbsp;&nbsp; For adding FR help file to the Delphi help system, you should:<br>
+- copy files from ..\FR\Help\English to ..\Delphi3\Help;<br>
+- add the following lines to ..\Delphi3\Help\Delphi3.cnt:<br>
+:Index FastReport Reference=FR.hlp<br>
+:Link FR.hlp<br>
+<br>
+3.3. Delphi 4.0.<br>
+&nbsp;&nbsp; Copy file FR_Class.dcu from ..\FR\LIB_D4 to ..\FR\SOURCE (if you evaluating<br>
+FR).<br>
+&nbsp;&nbsp; Run Delphi, choose &quot;File/Open...&quot; menu command and open package<br>
+FR4.dpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into Delphi.<br>
+&nbsp;&nbsp; After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs appears in Delphi's<br>
+components palette. AFTER INSTALLING YOU SHOULD REBOOT DELPHI!<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+&nbsp;&nbsp; For adding FR help file to the Delphi help system, you should:<br>
+- copy files from ..\FR\Help\English to ..\Delphi4\Help;<br>
+- add the following lines to ..\Delphi4\Help\Delphi4.cnt:<br>
+:Index FastReport Reference=FR.hlp<br>
+:Link FR.hlp<br>
+<br>
+3.4. Delphi 5.0.<br>
+&nbsp;&nbsp; Copy file FR_Class.dcu from ..\FR\LIB_D5 to ..\FR\SOURCE (if you evaluating<br>
+FR).<br>
+&nbsp;&nbsp; Run Delphi, choose &quot;File/Open...&quot; menu command and open package<br>
+FR5.dpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into Delphi.<br>
+&nbsp;&nbsp; After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs appears in Delphi's<br>
+components palette. AFTER INSTALLING YOU SHOULD REBOOT DELPHI!<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+&nbsp;&nbsp; For adding FR help file to the Delphi help system, you should:<br>
+- copy files from ..\FR\Help\English to ..\Delphi5\Help;<br>
+- add the following lines to ..\Delphi5\Help\Delphi5.cnt:<br>
+:Index FastReport Reference=FR.hlp<br>
+:Link FR.hlp<br>
+<br>
+3.5. Delphi 6.0.<br>
+&nbsp;&nbsp; Copy file FR_Class.dcu from ..\FR\LIB_D6 to ..\FR\SOURCE (if you evaluating<br>
+FR).<br>
+&nbsp;&nbsp; Run Delphi, choose &quot;File/Open...&quot; menu command and open package<br>
+FR6.dpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into Delphi.<br>
+&nbsp;&nbsp; After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs appears in Delphi's<br>
+components palette. AFTER INSTALLING YOU SHOULD REBOOT DELPHI!<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+&nbsp;&nbsp; For adding FR help file to the Delphi help system, you should:<br>
+- copy files from ..\FR\Help\English to ..\Delphi6\Help;<br>
+- add the following lines to ..\Delphi6\Help\Delphi6.cnt:<br>
+:Index FastReport Reference=FR.hlp<br>
+:Link FR.hlp<br>
+<br>
+3.6. Delphi 7.0.<br>
+&nbsp;&nbsp; Copy file FR_Class.dcu from ..\FR\LIB_D7 to ..\FR\SOURCE (if you evaluating<br>
+FR).<br>
+&nbsp;&nbsp; Run Delphi, choose &quot;File/Open...&quot; menu command and open package<br>
+FR7.dpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into Delphi.<br>
+&nbsp;&nbsp; After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs appears in Delphi's<br>
+components palette. AFTER INSTALLING YOU SHOULD REBOOT DELPHI!<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+&nbsp;&nbsp; For adding FR help file to the Delphi help system, you should:<br>
+- copy files from ..\FR\Help\English to ..\Delphi7\Help;<br>
+- add the following lines to ..\Delphi6\Help\Delphi7.cnt:<br>
+:Index FastReport Reference=FR.hlp<br>
+:Link FR.hlp<br>
+<br>
+3.7. C++Builder 4.0.<br>
+&nbsp;&nbsp; Copy files FR_Class.obj, FR_Class.hpp from ..\FR\CBUILD4 and FR_Class.dcu<br>
+from ..\FR\LIB_D4 to ..\FR\SOURCE (if you evaluating FR).<br>
+&nbsp;&nbsp; Run C++Builder, choose &quot;File/Open...&quot; menu command and open package<br>
+FR4.bpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into IDE. After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs<br>
+appears in C++Builder components palette.<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+AFTER INSTALLING YOU SHOULD REBOOT C++BUILDER!<br>
+&nbsp;&nbsp; For adding FR help file to the C++Builder help system, choose<br>
+&quot;Help/Customize...&quot; menu command. In &quot;OpenHelp&quot; dialog in &quot;Contents&quot; tab<br>
+add file ..\FR\Help\English\FR.cnt, and in &quot;Index&quot; tab add file <br>
+..\FR\Help\English\FR.hlp. After this, save help project <br>
+(&quot;File|Save Project&quot; menu command).<br>
+<br>
+3.8. C++Builder 5.0.<br>
+&nbsp;&nbsp; Copy files FR_Class.obj, FR_Class.hpp from ..\FR\CBUILD5 and FR_Class.dcu<br>
+from ..\FR\LIB_D5 to ..\FR\SOURCE (if you evaluating FR).<br>
+&nbsp;&nbsp; Run C++Builder, choose &quot;File/Open...&quot; menu command and open package<br>
+FR5.bpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into IDE. After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs<br>
+appears in C++Builder components palette.<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+AFTER INSTALLING YOU SHOULD REBOOT C++BUILDER!<br>
+&nbsp;&nbsp; For adding FR help file to the C++Builder help system, choose<br>
+&quot;Help/Customize...&quot; menu command. In &quot;OpenHelp&quot; dialog in &quot;Contents&quot; tab<br>
+add file ..\FR\Help\English\FR.cnt, and in &quot;Index&quot; tab add file <br>
+..\FR\Help\English\FR.hlp. After this, save help project <br>
+(&quot;File|Save Project&quot; menu command).<br>
+<br>
+3.9. C++Builder 6.0.<br>
+&nbsp;&nbsp; Copy files FR_Class.obj, FR_Class.hpp from ..\FR\CBUILD6 and FR_Class.dcu<br>
+from ..\FR\LIB_D6 to ..\FR\SOURCE (if you evaluating FR).<br>
+&nbsp;&nbsp; Run C++Builder, choose &quot;File/Open...&quot; menu command and open package<br>
+FR6.bpk from ..\FR\SOURCE. In package editor, choose &quot;Compile&quot; button<br>
+to compile package. After compiling, press &quot;Install&quot; button to install<br>
+package into IDE. After installing, &quot;FastReport&quot; and &quot;FR Tools&quot; tabs<br>
+appears in C++Builder components palette.<br>
+&nbsp;&nbsp; Choose &quot;Tools/Environment options...&quot; menu command. Go &quot;Library&quot; tab<br>
+and add path to ..\FR\SOURCE directory to the &quot;Library path&quot; string.<br>
+AFTER INSTALLING YOU SHOULD REBOOT C++BUILDER!<br>
+&nbsp;&nbsp; For adding FR help file to the C++Builder help system, choose<br>
+&quot;Help/Customize...&quot; menu command. In &quot;OpenHelp&quot; dialog in &quot;Contents&quot; tab<br>
+add file ..\FR\Help\English\FR.cnt, and in &quot;Index&quot; tab add file <br>
+..\FR\Help\English\FR.hlp. After this, save help project <br>
+(&quot;File|Save Project&quot; menu command).<br>
+<br>
+3.10. Installing additional components.<br>
+&nbsp;&nbsp; There are three additional components included in standard FR package.<br>
+These components can be found in SOURCE\BDE, SOURCE\IBX and SOURCE\ADO<br>
+folders. They supersede old datamanager (TfrDataStorage component). To<br>
+install them, use same technique as described above. Each component have<br>
+a package file. To install in Delphi2, use file with Reg suffix (for example,<br>
+FR_BDEReg.pas).<br>
+&nbsp;&nbsp; WARNING! The old datamanager (TfrDataStorage) is outdated. It included in<br>
+this FR version, but will be removed in the next version. We highly <br>
+recommended to stop using it, move to new components and convert your existing<br>
+reports.<br>
+<br>
+<br>
+----------------------------------------------------------------------------<br>
+4. BACKWARD COMPATIBILITY<br>
+&nbsp;&nbsp; .frf files from FR2.1...FR2.4 is compatible. You can use FR2.1 .frf<br>
+in FR2.4; but you can't use new .frf files in older FR versions and builds.<br>
+&nbsp;&nbsp; See faq.txt if you want to open FreeReport 2.21 files.<br>
+&nbsp;&nbsp; FR CLX files can be opened by FR2.45 version. Since CLX and VCL uses<br>
+different paper numbering you may need to change paper format after opening<br>
+FR CLX report file. <br>
+&nbsp;&nbsp; Old datamanager (TfrDataManager) is not installed by default. Remove<br>
+comment from {$DEFINE DATAMANAGER} line in FR.inc file to install it.<br>
+<br>
+<br>
+----------------------------------------------------------------------------<br>
+5. REGISTERING<br>
+&nbsp;&nbsp; FastReport 2.4 is shareware. You can try trial version of FR2.4, which<br>
+prints only one page of report with nag label &quot;FastReport - unregistered&quot;.<br>
+Full version of FR shipped with full source code.<br>
+&nbsp;&nbsp; Single copy of FR2.4 costs $99. Site license (unlimited number of copies)<br>
+costs $990. You can register it with RegisterNow! or ShareIt online services<br>
+which accepts all kinds of payment. (to buy site license, buy 10 copies of FR).<br>
+&nbsp;&nbsp; To register, go FR home page http://www.fast-report.com, &quot;Register Now&quot;<br>
+reference. Registered users gets technical support and can upgrade to the next<br>
+version of FR with no additional payment (FR CLX is separate product, you need<br>
+to buy it even if you already registered FR 2.4).<br>
+<br>
+Our reseller in Poland:<br>
+Bartlomiej Zass (e-komp.net company): sales@fastreport.prv.pl<br>
+mobile: +48 502 826 355<br>
+www.fastreport.prv.pl<br>
+<br>
+Our reseller in Germany:<br>
+HK-Softwarevertrieb http://www.h-k.de/shop<br>
+Andrea Armbruster . Huntestrasse 15 . 26135 Oldenburg . Germany.<br>
+Phone/Fax: +49 (0)700 IBEXPERT (42397378)<br>
+Email aarmbruster@h-k.de<br>
+<br>
+----------------------------------------------------------------------------<br>
+6. NOTES<br>
+&nbsp;&nbsp; All units written by author, except the following:<br>
+&nbsp;- RichEdit editor taked from \DEMOS\RICHEDIT.<br>
+&nbsp;- Delphi version determining taken from RX 2.60.<br>
+&nbsp;- TfrSpeedButton component is based on RX TrxSpeedButton.<br>
+&nbsp;- Barcode component (frBarcod.pas) is written by Andreas Schmidt<br>
+&nbsp;&nbsp; and friends (freeware).<br>
+&nbsp;- See also &quot;CREDITS&quot; topic.<br>
+<br>
+<br>
+----------------------------------------------------------------------------<br>
+7. CREDITS<br>
+<br>
+Olivier Guilbaud &lt;golivier@free.fr&gt;:<br>
+&nbsp;- Barcode add-in (FR_BarC.pas)<br>
+&nbsp;- RoundRect add-in (FR_RRect.pas)<br>
+&nbsp;- Interface with OpenQueryBuilder (FR_QBEng.pas)<br>
+<br>
+Dmitry Statilko &lt;dima_misc@hotbox.ru&gt;:<br>
+&nbsp;- Flat comboboxes (FR_Combo.pas)<br>
+<br>
+Andrew Semack &lt;sammy@profix.poltava.ua&gt;:<br>
+&nbsp;- Interface with IB_Objects<br>
+<br>
+EMS Company, Alexander Khvastunov &lt;avx@ems.chel.su&gt;:<br>
+&nbsp;- TfrIBXComponents<br>
+&nbsp;- TfrFIBComponents<br>
+<br>
+Michael Shmakov &lt;misha@petrosoft.karelia.ru&gt;:<br>
+&nbsp;- TfrDAOComponents<br>
+<br>
+Andrew Dyrda &lt;andrewdyrda@chat.ru&gt;:<br>
+&nbsp;- Documentation<br>
+<br>
+Konstantin Butov &lt;kos@sp.iae.nsk.su&gt;:<br>
+&nbsp;- Idea and first version of TfrPrintGrid component<br>
+<br>
+Sergey Repalov &lt;ReSerg@mail.ru&gt;:<br>
+&nbsp;- TfrRTF_RS_ExportFilter<br>
+<br>
+Oleg Kharin &lt;ok@uvadrev.udmnet.ru&gt;:<br>
+&nbsp;- Full WYSIWYG support<br>
+<br>
+Stalker &lt;stalker732_4@yahoo.com&gt;:<br>
+&nbsp;- A lot of suggestions and bug reports<br>
+&nbsp;- TfrAsaComponents and others<br>
+<br>
+Boris Loboda &lt;barry@audit.kharkov.com&gt;:<br>
+&nbsp;- Help with hosting<br>
+<br>
+Akzhan Abdulin &lt;akzhan@mtgroup.ru&gt;:<br>
+&nbsp;- Life-time &quot;moderatorial [-]&quot; in RU.DELPHI :))<br>
+<br>
+Pavel Ishenin &lt;webpirat@mail.ru&gt;<br>
+&nbsp;- RTF, HTM export;<br>
+&nbsp;- TfrCrossView enchancements<br>
+<br>
+<br>
+Localization:<br>
+&nbsp;- Carsten Bech &lt;carsten.bech@teliamail.dk&gt; (danish)<br>
+&nbsp;- Wy &lt;wy6688@163.net&gt; (chinese)<br>
+&nbsp;- Roberto Mambriani &lt;rmambriani@fasanocomputers.com&gt; (italian)<br>
+&nbsp;- Bartlomiej Zass &lt;zass@pro.onet.pl&gt; (polish)<br>
+&nbsp;- Bolek Umnicki &lt;strato@polandmail.com&gt; (polish)<br>
+&nbsp;- Josep Mas &lt;xci@jet.es&gt; (catalan)<br>
+&nbsp;- Nei &lt;coopcred@leosoft.com.br&gt; (portuguese-brazil)<br>
+&nbsp;- Isaque Pinheiro &lt;axial@escelsa.com.br&gt; (portuguese-brazil)<br>
+&nbsp;- Bobby Gallagher &lt;bobbyg@indigo.ie&gt; (english)<br>
+&nbsp;- Francisco Purrinos &lt;purrinhos@cif.es&gt; (spanish)<br>
+&nbsp;- Andreas Pohl &lt;apohl@ibp-consult.com&gt; (german)<br>
+&nbsp;- Stefan Diestelmann &lt;sd@itsds.de&gt; (german)<br>
+&nbsp;- Arpad Toth &lt;ekosoft@signalsoft.sk&gt; (czech, slovak)<br>
+&nbsp;- Le Hung &lt;lehung@main.antszbar.hu&gt; (hungary)<br>
+&nbsp;- Tochenjuk Oleg &lt;frodo@uct.kiev.ua&gt; (ukrainian)<br>
+&nbsp;- Pierre Demers &lt;dempier2@hotmail.com&gt; (french)<br>
+&nbsp;- Olivier Guilbaud &lt;golivier@free.fr&gt; (french)<br>
+&nbsp;- Craig Manley &lt;c.manley@chello.nl&gt; (dutch)<br>
+&nbsp;- Burhan Chakmak &lt;bakisoft@nursat.kz&gt; (turkish)<br>
+&nbsp;- Jan W &lt;jan@ideida.se&gt; (swedish)<br>
+&nbsp;- Primoz Planinc &lt;info@planles.net&gt; (slovene)<br>
+<br>
+<br>
+Also thanks to all FR users who sent bugreports and suggestions!<br>
+<br>
+8. OTHER PRODUCTS FastReport Software RECOMMENDED<br>
+<br>
+&nbsp;All the products in this chapter are fully compatible with FastReport and <br>
+recommended to work with our product. <br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AidAim Software<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;---------------<br>
+<br>
+AidAim Software team of highly professional developers working in the<br>
+fields of DBMS, cryptography and data compression is focused on the<br>
+building of components, libraries and tools for software developers.<br>
+AidAim Software provides the 24x7 support for customers as well as<br>
+consulting services in set forth above fields.<br>
+http://www.aidaim.com <br>
+<br>
+EasyTable: High-speed compact DB engine for Delphi and C++ Builder <br>
+------------------------------------------------------------------<br>
+&nbsp;<br>
+&nbsp;&nbsp; Distribute your application with EasyTable and forget Borland Database<br>
+Engine (BDE). EasyTable is compact but powerful, EasyDB technology.<br>
+With EasyTable you don't need special installation and configuration, it<br>
+compiles right into your EXE. Make your application faster and smaller<br>
+using EasyTable database system. <br>
+Key Features:<br>
+ No BDE; no DLLs; full source code included<br>
+ Unmatched ease-of-use<br>
+ Small footprint<br>
+ All tables in one database file<br>
+ Fully compatible with standard DB-aware controls<br>
+ Encryption, BLOB data compression and much more. <br>
+<br>
+Easy Compression Library: Gain the power of compression and encryption<br>
+----------------------------------------------------------------------<br>
+<br>
+&nbsp;&nbsp; With Easy Compression Library you can add advanced compression and<br>
+encryption functionality to your projects as quickly and easily as never<br>
+before. Based on new original One-Stream technology, this toolkit has<br>
+everything you need to compress and encrypt files, strings, data packets<br>
+and even BLOB fields.<br>
+Easy Compression Library provides a wide variety of compression algorithms,<br>
+so you can obtain high speed as well as high compression ratio that make<br>
+Easy Compression Library your best choice.<br>
+Key Features:<br>
+ A plenty of advanced compression algorithms<br>
+ Unmatched ease-of-use<br>
+ No DLLs, compiles right into your EXE; small customizable footprint<br>
+ Full compatible with Borland stream classes<br>
+ Strong encryption, compression on-the-fly, and much more.<br>
+<br>
+<br>
+<br>
+----------------------------------------------------------------------------<br>
+<br>
+FastReport Software, <br>
+Alexander Tzyganenko - Chief Technology Officer<br>
+<br>
+e-mail:&nbsp;&nbsp;&nbsp;&nbsp;info@fast-report.com<br>
+web sites: http://www.fast-report.com<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; http://www.fastreport.org&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; http://www.fastreport.ru<br>
+</BODY></HTML>
